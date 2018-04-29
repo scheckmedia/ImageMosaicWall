@@ -22,9 +22,14 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+signals:
+    void mosaicCalculationFinished(QMap<GridPoint, QImage>&);
+
 public slots:    
     void on_btnLoad_clicked();
-    void onGridPropsValueChanged(const QString &arg1);    
+    void onGridPropsValueChanged();
+    void onOutputResolutionChanged();
+    void onMosaicCreationFinished();
 
 private slots:
     void on_pushButton_clicked();
@@ -36,6 +41,8 @@ private:
     ImageProcessing m_imageProcessing;
     std::shared_ptr<ImageViewer> iv;
     QFutureWatcher<QRgb> *m_imageScaling;
+    QThread *m_mosaicGeneration;
+    QMap<GridPoint, QImage> m_mappedImages;
 };
 
 #endif // MAINWINDOW_H
