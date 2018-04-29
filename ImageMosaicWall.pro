@@ -29,6 +29,7 @@ SOURCES += \
     imageviewer.cpp \
     imageprocessing.cpp
 
+
 HEADERS += \
         mainwindow.h \
     imageviewer.h \
