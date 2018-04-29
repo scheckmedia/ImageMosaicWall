@@ -10,6 +10,14 @@ ImageViewer::ImageViewer(QWidget *parent) :
     ui(new Ui::ImageViewer)
 {
     ui->setupUi(this);
+    QGraphicsScene *scene = new QGraphicsScene(this);
+    setScene(scene);
+
+    m_imageItem = new QGraphicsPixmapItem();
+    m_grid = new QGraphicsItemGroup(m_imageItem);
+    m_mosaicImages = new QGraphicsItemGroup(m_imageItem);
+    m_mosaicLoading = new QGraphicsItemGroup(m_imageItem);
+    scene->addItem(m_imageItem);
 }
 
 ImageViewer::~ImageViewer()
@@ -28,16 +36,27 @@ void ImageViewer::wheelEvent(QWheelEvent *event)
     const QPointF move = p1mouse - event->pos(); // The move
     horizontalScrollBar()->setValue(move.x() + horizontalScrollBar()->value());
     verticalScrollBar()->setValue(move.y() + verticalScrollBar()->value());
+
+    double f = transform().m11();
+    qDebug() << transform() << " m1: " << f << scene()->width() * f;
+    qDebug() << "zoom: " << (f * (double)m_image.size().width()) << (f * (double)m_image.size().height() );
 }
 
 void ImageViewer::setImage(QImage img)
 {
+    setImage(img, img.size());
+}
+
+void ImageViewer::setImage(QImage img, QSize resolution)
+{
+    for(QGraphicsItem* item : m_mosaicImages->childItems())
+    {
+        delete item;
+    }
+
     m_image = img;
-    QGraphicsScene *scene = new QGraphicsScene(this);
-    setScene(scene);
     QSize s = this->parentWidget()->size();
-    scene->addPixmap(QPixmap::fromImage(m_image));    
-    show();
+    m_imageItem->setPixmap(QPixmap::fromImage(m_image));
 
     float sx = s.width() / (float)m_image.width();
     float sy = s.height() / (float)m_image.height();
@@ -47,37 +66,94 @@ void ImageViewer::setImage(QImage img)
 
 void ImageViewer::setGrid(QSize gridResolution)
 {
-    int gx = m_image.width() / gridResolution.width();
-    int gy = m_image.height() / gridResolution.height();
+    m_gridResolution = gridResolution;
+    double gx = m_image.width() / (double)gridResolution.width();
+    double gy = m_image.height() / (double)gridResolution.height();
     qDebug() << gx << " x " << gy;
 
     if(m_grid != nullptr)
     {
-        scene()->removeItem(m_grid);
         for(QGraphicsItem* item : m_grid->childItems())
         {
             delete item;
         }
-
-        delete m_grid;
-        qDebug() << " delete group" << (m_grid == nullptr);
     }
 
-    m_grid = new QGraphicsItemGroup();
 
-    for(int x = 0; x < m_image.width(); x += gx)
-    {
-        QGraphicsLineItem* s = new QGraphicsLineItem(QLine(QPoint(x, 0), QPoint(x, m_image.height())));
+    for(int x = 0; x < gridResolution.width(); ++x)
+    {        
+        QGraphicsLineItem* s = new QGraphicsLineItem(QLineF(QPointF(x * gx, 0), QPointF(x * gx, m_image.height())));
         m_grid->addToGroup(s);
     }
 
-    for(int y = 0; y < m_image.height(); y += gy)
+    for(int y = 0; y < gridResolution.height(); y++)
     {
-        QGraphicsLineItem* s = new QGraphicsLineItem(QLine(QPoint(0, y), QPoint(m_image.width(), y)));
+        QGraphicsLineItem* s = new QGraphicsLineItem(QLine(QPoint(0, y * gy), QPoint(m_image.width(), y * gy)));
         m_grid->addToGroup(s);
     }
+}
 
-    scene()->addItem(m_grid);
+void ImageViewer::setMosaicImages(QMap<GridPoint, QImage> &images)
+{        
+
+    qDebug() << "in setMosiac...";
+    setMosaicLoadingDone();
+    if(m_mosaicImages != nullptr)
+    {
+        for(QGraphicsItem* item : m_mosaicImages->childItems())
+        {
+            delete item;
+        }
+    }
+
+    qDebug() << " m_mosaicImages: " << m_mosaicImages;
+
+
+    double gx = m_image.width() / (double)m_gridResolution.width();
+    double gy = m_image.height() / (double)m_gridResolution.height();
+    QSizeF cellSize(gx, gy);
+
+    for(auto &p : images.keys())
+    {
+        QImage img = images.value(p);
+        QGraphicsItem* item = new QGraphicsPixmapItem(QPixmap::fromImage(img));
+        item->setPos(QPointF(p.x() * cellSize.width(), p.y() * cellSize.height()));
+        //item->setOpacity(0.8);
+
+        m_mosaicImages->addToGroup(item);
+    }
+
+    m_grid->setZValue( 1 );
+
+    qDebug() << "res: " << size();
+
+    QPixmap pixMap = this->grab();
+    pixMap.save("/Users/tobi/Desktop/stage.png");
+}
+
+void ImageViewer::setLoadingMosaicAt(const GridPoint p)
+{    
+    double gx = m_image.width() / (double)m_gridResolution.width();
+    double gy = m_image.height() / (double)m_gridResolution.height();
+    QSizeF cellSize(gx, gy);
+
+
+    QImage background(cellSize.width(), cellSize.height(), QImage::Format::Format_ARGB32);
+    background.fill(QColor(128,0,0));
+    QGraphicsPixmapItem* item = new QGraphicsPixmapItem(QPixmap::fromImage(background));
+    item->setPos(QPointF(p.x() * cellSize.width(), p.y() * cellSize.height()));
+    item->setOpacity(0.8);
+
+    m_mosaicLoading->addToGroup(item);
+}
+
+void ImageViewer::setMosaicLoadingDone()
+{
+    qDebug() << "set moasic done";
+    for(QGraphicsItem *p : m_mosaicLoading->childItems())
+    {
+        delete p;
+    }
 }
 
 void ImageViewer::mousePressEvent(QMouseEvent *event)
