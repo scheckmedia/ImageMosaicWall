@@ -11,7 +11,7 @@ os:
 dist: trusty
 
 env:
-  - CONFIG=RELEASE QT=59 BREW=ex PPA=beineri/opt-qt593-trusty
+  - CONFIG=RELEASE QT=510 BREW=@5.10 # PPA=beineri/opt-qt593-trusty
 
 before_install:
   - '[[ "$TRAVIS_OS_NAME" != linux || -z "$PPA" ]] || sudo add-apt-repository -y ppa:$PPA'
@@ -40,7 +40,7 @@ before_script:
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || export QT_SELECT=qt5'
   - mkdir -p "$TRAVIS_BUILD_DIR-build"
-  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG c++11" "$TRAVIS_BUILD_DIR"
+  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
 
 script:
   - make -C "$TRAVIS_BUILD_DIR-build" all
