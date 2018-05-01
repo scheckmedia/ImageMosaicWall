@@ -11,7 +11,8 @@ os:
 dist: trusty
 
 env:
-  - CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty
+  matrix:
+    - CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty
 
 matrix:
   allow_failures:
