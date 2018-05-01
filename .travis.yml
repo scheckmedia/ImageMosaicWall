@@ -40,11 +40,10 @@ before_script:
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || export QT_SELECT=qt5'
   - mkdir -p "$TRAVIS_BUILD_DIR-build"
-  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
+  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG c++11" "$TRAVIS_BUILD_DIR"
 
 script:
   - make -C "$TRAVIS_BUILD_DIR-build" all
-  - make -C "$TRAVIS_BUILD_DIR-build" -j2 check TESTARGS=-silent
   - ls "$TRAVIS_BUILD_DIR-build"
 
 
