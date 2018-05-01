@@ -19,13 +19,14 @@ void ImageProcessing::processMosaicImages(const QList<QString> &imageList)
     calculateImageMeanMap(imageList);
 }
 
-bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, QMap<GridPoint,QImage>* dst)
+bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int history, QMap<GridPoint,QImage>* dst)
 {
     if(!isReady())
         return false;
 
 
     m_outputSize = outputSize;
+    m_historySize = history;
 
     int gx = m_outputSize.width() / (gridSize.width() - 1);
     int gy = m_outputSize.height() / (gridSize.height() -1);
@@ -36,6 +37,8 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, QMap<GridP
     int numCells = gridSize.width() * gridSize.height();
     int itemsPerThread = numCells / maxThreads;
     QThreadPool pool;
+
+    m_outputImage = std::unique_ptr<QImage>(new QImage(outputSize, QImage::Format_ARGB32));
 
 
     int numCellsPerThread = itemsPerThread;
@@ -50,7 +53,6 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, QMap<GridP
     }
 
     pool.waitForDone();
-
     return true;
 }
 
@@ -128,14 +130,20 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList)
 
 void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize, QMap<GridPoint,QImage>* dstMap, const int pos, const int length)
 {
+    QVector<QString> history;
     int g = pos;
-    qDebug() << "enter thread! " << pos << " length: " << length << " cell: " << cellSize << " grid: " << gridSize;
+
     for(; g < pos + length; ++g)
     {
+
         double bestDistance = INT_MAX;
         QString imagePath;
         QColor cellMean = m_gridColorMap.at(g);
         ColorLab cellMeanLab = toLab(cellMean);
+
+        GridPoint p;
+        p.setX(g % gridSize.width());
+        p.setY(g / gridSize.width());
 
         for(auto &image : m_imageMeanMap.keys())
         {
@@ -144,22 +152,34 @@ void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize
 
             double dist = calculateDistance(cellMeanLab, imageMean);
 
-            if(dist < bestDistance)
+            if(dist < bestDistance && history.contains(image) == false)
             {
                 imagePath = image;
                 bestDistance = dist;
             }
         }
 
-        GridPoint p;
-        p.setX(g % gridSize.width());
-        p.setY(g / gridSize.width());
+        history.push_back(imagePath);
 
-        emit mosaicGenerated(p);
+        if(history.size() > m_historySize)
+            history.clear();        
 
         QMutexLocker lock(&m_lockMean);
-        dstMap->insert(p, QImage(imagePath).scaled(cellSize, Qt::IgnoreAspectRatio));
+        QImage cellImage = QImage(imagePath).scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation).copy(QRect(QPoint(0, 0), cellSize));
+        dstMap->insert(p, cellImage);
+        emit mosaicGenerated(p);
 
+        double gx = m_outputImage.get()->width() / (double)gridSize.width();
+        double gy = m_outputImage.get()->height() / (double)gridSize.height();
+
+        for(int y = 0; y < cellSize.height(); ++y)
+        {
+            for(int x = 0; x < cellSize.width(); ++x)
+            {
+                auto const pixel = cellImage.pixel(x, y);
+                m_outputImage.get()->setPixel(round(p.x() * gx + x), round(p.y() * gy + y), pixel);
+            }
+        }
     }
 }
 
@@ -171,6 +191,11 @@ double ImageProcessing::calculateDistance(QColor rhs, QColor lhs) const
 double ImageProcessing::calculateDistance(ColorLab rhs, ColorLab lhs) const
 {
     return abs(rhs.L - lhs.L) + abs(rhs.a - lhs.a) + abs(rhs.b - lhs.b);
+}
+
+const QImage& ImageProcessing::getOutputImage() const
+{
+    return *m_outputImage.get();
 }
 
 void ImageProcessing::processGrid(const QImage &baseImage, QSize gridSize)
@@ -204,28 +229,6 @@ void ImageProcessing::processGrid(const QImage &baseImage, QSize gridSize)
     }
 
     pool.waitForDone();
-
-
-    /*
-     * DEBUG Code
-    qDebug() << "Size: " << m_gridColorMap.size();
-    QString filename = "/Users/tobi/Desktop/test.bmp";
-    QImage testImage(gridSize, QImage::Format_ARGB32);
-
-    for(int y = 0; y < gridSize.height(); ++y)
-    {
-        for(int x = 0; x < gridSize.width(); ++x)
-        {
-            QColor c = colorMap->at(y * gridSize.width() + x);
-            testImage.setPixelColor(x, y, c);
-        }
-    }
-
-    qDebug() << "save state: " << testImage.save(filename);
-
-    QImage test2(baseImage);
-    test2.scaled(gridSize,  Qt::IgnoreAspectRatio, Qt::SmoothTransformation).save("/Users/tobi/Desktop/test2.bmp");
-    */
 }
 
 std::vector<QColor> ImageProcessing::getGridColorMap() const

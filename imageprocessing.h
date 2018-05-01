@@ -52,6 +52,8 @@ private:
    QMap<QString, QColor> m_imageMeanMap;
    QMutex m_lockMean;
    QSize m_outputSize;
+   std::unique_ptr<QImage> m_outputImage;
+   int m_historySize;
 
 
 signals:
@@ -65,11 +67,12 @@ public:
 
     void processGrid(const QImage&, QSize);
     void processMosaicImages(const QList<QString>&);
-    bool generateImage(QSize, QSize, QMap<GridPoint, QImage>*);
+    bool generateImage(QSize, QSize, int, QMap<GridPoint, QImage>*);
     bool isReady();
 
     std::vector<QColor> getGridColorMap() const;
 
+    const QImage& getOutputImage() const;
 };
 
 
