@@ -1,7 +1,7 @@
 # Image Mosaic Wall
 This application allows you to create an image based on a bunch of other images. It looks like a mosaic effect. But on detail you can check the following GIF. 
 
-[![Video](https://raw.github.com/scheckmedia/ImageMosaicWall/master/docs/placeholder.jpg)](https://raw.github.com/scheckmedia/ImageMosaicWall/master/docsimw.mp4)
+[![Video](https://github.com/scheckmedia/ImageMosaicWall/blob/master/docs/placeholer.jpg?raw=true)](https://scheck-media.de/tmp/imw.mp4)
 
 
 ## TODO's
