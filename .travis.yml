@@ -16,7 +16,7 @@ env:
 
 matrix:
   allow_failures:
-     - { os: osx, compiler: gcc, env: QT=510 BREW=@5.10  PPA=beineri/opt-qt-5.10.1-trusty }
+     - { os: osx, compiler: gcc, env: CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty }
 
 before_install:
   - '[[ "$TRAVIS_OS_NAME" != linux || -z "$PPA" ]] || sudo add-apt-repository -y ppa:$PPA'
