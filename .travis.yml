@@ -1,64 +1,56 @@
-# based on https://github.com/pcolby/aws-sdk-qt/blob/master/.travis.yml
 language: cpp
 compiler:
-  - clang
-  - gcc
-
+- clang
+- gcc
 os:
-  - linux
-  - osx
-
+- linux
+- osx
 dist: trusty
-
 env:
   matrix:
-    - CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty
-
+  - CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty
 matrix:
   allow_failures:
-     - { os: osx, compiler: gcc, env: CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty }
-
+  - os: osx
+    compiler: gcc
+    env: CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty
 before_install:
-  - '[[ "$TRAVIS_OS_NAME" != linux || -z "$PPA" ]] || sudo add-apt-repository -y ppa:$PPA'
-  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
-  - '[ "$TRAVIS_OS_NAME" != osx   ] || brew update'
-
-
+- '[[ "$TRAVIS_OS_NAME" != linux || -z "$PPA" ]] || sudo add-apt-repository -y ppa:$PPA'
+- '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
+- '[ "$TRAVIS_OS_NAME" != osx   ] || brew update'
 install:
-  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install doxygen graphviz lcov'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev'
-  - '[ "$TRAVIS_OS_NAME" != linux ] || gem install lcoveralls'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install doxygen graphviz qt$BREW'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt$BREW'
-  - qmake -v
-
-
+- '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install doxygen graphviz lcov'
+- '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install
+  qt${QT}base qt${QT}xmlpatterns'
+- '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install
+  qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev'
+- '[ "$TRAVIS_OS_NAME" != linux ] || gem install lcoveralls'
+- '[ "$TRAVIS_OS_NAME" != osx ] || brew install doxygen graphviz qt$BREW'
+- '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt$BREW'
+- qmake -v
 before_script:
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
-  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
-  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || export QT_SELECT=qt5'
-  - mkdir -p "$TRAVIS_BUILD_DIR-build"
-  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
-
+- '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
+- '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
+- '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
+- '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
+- '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
+- '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || export QT_SELECT=qt5'
+- mkdir -p "$TRAVIS_BUILD_DIR-build"
+- qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
 script:
-  - make -C "$TRAVIS_BUILD_DIR-build" all
-  - ls "$TRAVIS_BUILD_DIR-build"
-
-
+- make -C "$TRAVIS_BUILD_DIR-build" all
+- ls "$TRAVIS_BUILD_DIR-build"
 before_deploy:
-  - 'if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall; fi;'
-  - 'if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall.app; fi;'
-
+- if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf
+  ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall; fi;
+- if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf
+  ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall.app; fi;
 deploy:
   provider: releases
   api_key:
-    secure: faqXDjv3SX3BYg36+a4xvFZ5L26sIz1u7edjtj1KgqIqUPrBXfj1FAkEjpEAlvLlS0OL2OaJghXua1NuZlzL7+dl2eRtD32oZWyejUS+jy2yFwRJ3oSXGL5T20MM5xFUpDXRm6VuoIFVfuzieJqzz7gVPMr/uT1JnCqbB3GEtAc=
-  file: "ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz"
-  skip_cleanup: true
+    secure: LJ0sgWZYotr+edurWc0n76wKYyrx6DYWHdZVs5ggneIhFELRHRdnULJqwfCXfK7z5QvRenozYwbnjDw5GF4PN5H9AD0c5Bl5NxXCOjnaLoGkXak3bbyLpVM1P/n8KsEnRdBsjxCYO2mOMHjyicXifQEhglJwjHK+rIf9tEjwbP5E0/joWlY8xFx5RXEo28HXRSSH7vhrx97zu7g3T3Ds/HNAKP9y2fQa9E0XJDvpmibt5n9D4vG9QAs/bzAw02XU4ZH4MmZBBZ+i0jVLZ8v1ctdcYlH4NXIAqLV4lvbfAgznqCuHRZNiCrhQxd7Gcm23ZA7sbveSykbFEYwIkDsvqPvHUsGcbx5n08/CE9CO3WnJhzCBR6ugG68tn5xjWM1YRP8DETYIUZsbDunIPmL9JZMBHmdZRUITdIUxgKD10fxhYbYDQKO0ZkTSph7spLkG3le/3+dT4OIdYI1+Nif43v+KzFmhLTxzSmgMwPqMTru8uaran1pNVUzPP3W903jfXvekC2m1yRXlCOwR5Iq8SR9rSHIIz9tfYITP/O7Hc1UaTdGp9BtnpnuPRb0m8qmzCtR+uu2pG6JFCjwRn1kUy59xk3f/iP0vqGRkPK2zRQm1nBLkTE+xZoZvUp9zLEVyZm4KJOblxeun2GpEYugS1dQGHZ0LP1tNFfqXkKzFFPc=
+  file: ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz
+  skip_clean: true
   on:
     branch: master
     repo: scheckmedia/ImageMosaicWall
