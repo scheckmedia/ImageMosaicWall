@@ -42,14 +42,14 @@ script:
 - ls "$TRAVIS_BUILD_DIR-build"
 before_deploy:
 - if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf
-  ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall; fi;
+  ImageMosaicWall_"$TRAVIS_OS_NAME"_master.tar.gz ImageMosaicWall; fi;
 - if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf
-  ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall.app; fi;
+  ImageMosaicWall_"$TRAVIS_OS_NAME"_master.tar.gz ImageMosaicWall.app; fi;
 deploy:
   provider: releases
   api_key:
     secure: LJ0sgWZYotr+edurWc0n76wKYyrx6DYWHdZVs5ggneIhFELRHRdnULJqwfCXfK7z5QvRenozYwbnjDw5GF4PN5H9AD0c5Bl5NxXCOjnaLoGkXak3bbyLpVM1P/n8KsEnRdBsjxCYO2mOMHjyicXifQEhglJwjHK+rIf9tEjwbP5E0/joWlY8xFx5RXEo28HXRSSH7vhrx97zu7g3T3Ds/HNAKP9y2fQa9E0XJDvpmibt5n9D4vG9QAs/bzAw02XU4ZH4MmZBBZ+i0jVLZ8v1ctdcYlH4NXIAqLV4lvbfAgznqCuHRZNiCrhQxd7Gcm23ZA7sbveSykbFEYwIkDsvqPvHUsGcbx5n08/CE9CO3WnJhzCBR6ugG68tn5xjWM1YRP8DETYIUZsbDunIPmL9JZMBHmdZRUITdIUxgKD10fxhYbYDQKO0ZkTSph7spLkG3le/3+dT4OIdYI1+Nif43v+KzFmhLTxzSmgMwPqMTru8uaran1pNVUzPP3W903jfXvekC2m1yRXlCOwR5Iq8SR9rSHIIz9tfYITP/O7Hc1UaTdGp9BtnpnuPRb0m8qmzCtR+uu2pG6JFCjwRn1kUy59xk3f/iP0vqGRkPK2zRQm1nBLkTE+xZoZvUp9zLEVyZm4KJOblxeun2GpEYugS1dQGHZ0LP1tNFfqXkKzFFPc=
-  file: ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz
+  file: ImageMosaicWall_"$TRAVIS_OS_NAME"_master.tar.gz
   skip_clean: true
   on:
     branch: master
