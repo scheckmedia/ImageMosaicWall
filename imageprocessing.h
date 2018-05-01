@@ -1,6 +1,7 @@
 #ifndef IMAGEPROCESSOR_H
 #define IMAGEPROCESSOR_H
 
+#include <memory>
 #include <QtConcurrent>
 #include <QObject>
 #include <QMap>
