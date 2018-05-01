@@ -1,0 +1,84 @@
+/*
+  orange: #AD3600
+  lightblue: #A3BED2
+  darkgrey: #333333
+  grey: #515151
+  lightgrey: #989899
+
+*/
+
+
+QMainWindow {
+  background-color: #333333;
+}
+
+.MainWindow QLabel {
+  color: #989899;
+}
+
+#ImageViewer {
+  background-color: #515151;
+}
+
+#lblGrid, #lblSettings, #lblOutputResolution, #lblMosaicEffect {
+  font-size: 18px;
+  border-bottom: 1px solid #989899;
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-radius: 0px;
+}
+
+QPushButton {
+  border: 2px solid #333;
+  padding: 5 px;
+  background: #AD3600;
+  background-position: left;
+}
+
+QPushButton:disabled {
+  background: #50AD3600;
+}
+
+QPushButton:hover {
+  background-color: #515151;
+}
+
+QPushButton:pressed {
+  background-color: #989899;
+}
+
+QSpinBox {
+  background-color: #515151;
+  border: none;
+  color: #989899;
+  height: 30px;
+  padding: 5px 10px 5px 5px;
+}
+
+QSpinBox::down-button, QSpinBox::up-button {
+  color: #989899;
+  background-color: #989899;
+  width: 20px;
+  height: 20px;
+  border-width: 1px;
+}
+
+QSpinBox::down-button {
+  border-top: 1px solid #515151;
+}
+
+QSpinBox::down-arrow, QSpinBox::up-arrow  {
+  color: #515151;
+  width: 10px;
+  height: 10px;
+}
+
+QSpinBox::up-arrow {
+  image: url(:/icons/assets/up.png);
+}
+
+QSpinBox::down-arrow {
+  image: url(:/icons/assets/down.png);
+}
