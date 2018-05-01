@@ -14,17 +14,22 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
-    iv = std::shared_ptr<ImageViewer>(new ImageViewer());
-    ui->wImageContainer->layout()->addWidget(iv.get());
+    ui->setupUi(this);    
+
+    QFile file(":/styles/default.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    setStyleSheet(styleSheet);
+
+    ui->wImageContainer->layout()->addWidget(&m_imageView);
     qDebug() << ui->wImageContainer->layout()->objectName();
 
     qRegisterMetaType<GridPoint>("GridPoint");
     connect(ui->sbRows, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
     connect(ui->sbCols, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
     connect(ui->btnSetResolution, SIGNAL(clicked(bool)), this, SLOT(onOutputResolutionChanged()));
-    connect(&m_imageProcessing, &ImageProcessing::mosaicGenerated, iv.get(), &ImageViewer::setLoadingMosaicAt);
-    connect(this, &MainWindow::mosaicCalculationFinished, iv.get(), &ImageViewer::setMosaicImages);
+    connect(&m_imageProcessing, &ImageProcessing::mosaicGenerated, &m_imageView, &ImageViewer::setLoadingMosaicAt);
+    connect(this, &MainWindow::mosaicCalculationFinished, &m_imageView, &ImageViewer::setMosaicImages);
 }
 
 MainWindow::~MainWindow()
@@ -32,25 +37,34 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::updateStatus()
+{
+    QString imageInfo  = QString("<b style=\"text-indent: 100px\">%1</b> %2x%3").arg(tr("Image Resolution:")).arg(m_baseImage.width()).arg(m_baseImage.height());
+    QString folderInfo = QString("<b style=\"text-indent: 100px\">%1</b> %2").arg(tr("Images in Folder:")).arg(m_imageProcessing.getGridColorMap().size());
+
+    ui->lblStatus->setText(QString("%1<br/>%2").arg(imageInfo).arg(folderInfo));
+
+    if(m_baseImage.width() > 0 && m_baseImage.height())
+        ui->btnSetResolution->setEnabled(true);
+}
+
 void MainWindow::on_btnLoad_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(this, tr("Open Image"),  QDir::homePath(), tr("ImageFiles (*.png *.jpg *bmp)"));
 
     if (filename.isEmpty())
-        return;
-
+        return;    
 
     m_baseImage = QImage(filename);
-    QString imageInfo = QString("%1 %2x%3").arg(tr("Image Resolution")).arg(m_baseImage.width()).arg(m_baseImage.height());
-    ui->lblImageInfo->setText(imageInfo);
+    updateStatus();
 
     ui->sbWidth->setValue(m_baseImage.width());
     ui->sbHeight->setValue(m_baseImage.height());
 
     QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
 
-    iv->setImage(m_baseImage);
-    iv->setGrid(gridSize);
+    m_imageView.setImage(m_baseImage);
+    m_imageView.setGrid(gridSize);
 
     QtConcurrent::run([=]() {
         m_imageProcessing.processGrid(m_baseImage, gridSize);
@@ -64,7 +78,7 @@ void MainWindow::onGridPropsValueChanged()
         return;
 
     QSize gridSize(ui->sbCols->value(), ui->sbRows->value());
-    iv->setGrid(gridSize);
+    m_imageView.setGrid(gridSize);
     QtConcurrent::run([=]() {
         m_imageProcessing.processGrid(m_baseImage, gridSize);
         ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
@@ -79,14 +93,16 @@ void MainWindow::onOutputResolutionChanged()
         return;
 
     m_baseImage = m_baseImage.scaled(res);
-    iv->setImage(m_baseImage);
+    m_imageView.setImage(m_baseImage);
     onGridPropsValueChanged();
+    ui->btnSave->setEnabled(false);
 }
 
 void MainWindow::onMosaicCreationFinished()
 {
     qDebug() << " some shit is done";
     emit mosaicCalculationFinished(m_mappedImages);
+    ui->btnSave->setEnabled(true);
     delete m_mosaicGeneration;
 }
 
@@ -104,10 +120,10 @@ void MainWindow::on_pushButton_clicked()
         imageList.append(iterator.filePath());
     }
 
-    ui->lblImagesFolder->setText(QString("%1 Files selected").arg(imageList.size()));
     QtConcurrent::run([=]() {
         m_imageProcessing.processMosaicImages(imageList);
         ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
+        updateStatus();
     });
 
 }
@@ -120,7 +136,7 @@ void MainWindow::on_btnGenerate_clicked()
         QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
 
         m_imageProcessing.moveToThread(this->thread());
-        bool success = m_imageProcessing.generateImage(m_baseImage.size(), gridSize, &m_mappedImages);
+        bool success = m_imageProcessing.generateImage(m_baseImage.size(), gridSize, ui->sbHistory->value(), &m_mappedImages);
 
         if(!success)
             return;
@@ -130,4 +146,13 @@ void MainWindow::on_btnGenerate_clicked()
     });
     connect(m_mosaicGeneration, SIGNAL(finished()), this, SLOT(onMosaicCreationFinished()));
     m_mosaicGeneration->start();
+}
+
+void MainWindow::on_btnSave_clicked()
+{
+    QString defaultFileExtension = "PNG (*.png)";
+    QString filename = QFileDialog::getSaveFileName(this, "Save Mosaic Image",
+                                 QDir::homePath(),
+                                 tr("JPEG (*.jpg);;PNG (*.png)"), &defaultFileExtension);
+    m_imageProcessing.getOutputImage().save(filename);
 }
