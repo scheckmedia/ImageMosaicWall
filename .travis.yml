@@ -50,8 +50,8 @@ script:
 
 
 before_deploy:
-  - 'if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall.app; fi;'
-  - 'if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall; fi;'
+  - 'if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall; fi;'
+  - 'if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd $TRAVIS_BUILD_DIR-build && tar -zcvf ImageMosaicWall_$TRAVIS_OS_NAME_master.tar.gz ImageMosaicWall.app; fi;'
 
 deploy:
   provider: releases
