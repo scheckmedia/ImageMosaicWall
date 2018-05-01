@@ -28,10 +28,11 @@ public:
     void mouseMoveEvent(QMouseEvent *event) override;
     void setImage(QImage img);
     void setImage(QImage img, QSize resolution);
-    void setGrid(QSize gridResolution);        
+    void setGrid(QSize gridResolution);
+    void setMosaicLoadingDone();
 
 private:
-    void setMosaicLoadingDone();
+
 
 private:
     Ui::ImageViewer *ui;

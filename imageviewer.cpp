@@ -18,6 +18,8 @@ ImageViewer::ImageViewer(QWidget *parent) :
     m_mosaicImages = new QGraphicsItemGroup(m_imageItem);
     m_mosaicLoading = new QGraphicsItemGroup(m_imageItem);
     scene->addItem(m_imageItem);
+
+    m_mosaicLoading->setZValue(10);
 }
 
 ImageViewer::~ImageViewer()
@@ -54,18 +56,29 @@ void ImageViewer::setImage(QImage img, QSize resolution)
         delete item;
     }
 
+
+    qDebug() << sceneRect();
+    resetMatrix();
+
     m_image = img;
-    QSize s = this->parentWidget()->size();
+    QSize s = parentWidget()->size();
     m_imageItem->setPixmap(QPixmap::fromImage(m_image));
+    setSceneRect(0.0, 0.0, m_image.width(), m_image.height());
 
     float sx = s.width() / (float)m_image.width();
     float sy = s.height() / (float)m_image.height();
     float ratio = qMin(sx, sy);
     scale(m_image.width() * ratio / m_image.width(), m_image.height() * ratio / m_image.height());
+    show();
 }
 
 void ImageViewer::setGrid(QSize gridResolution)
 {
+    for(QGraphicsItem* item : m_mosaicImages->childItems())
+    {
+        delete item;
+    }
+
     m_gridResolution = gridResolution;
     double gx = m_image.width() / (double)gridResolution.width();
     double gy = m_image.height() / (double)gridResolution.height();
@@ -124,11 +137,6 @@ void ImageViewer::setMosaicImages(QMap<GridPoint, QImage> &images)
     }
 
     m_grid->setZValue( 1 );
-
-    qDebug() << "res: " << size();
-
-    QPixmap pixMap = this->grab();
-    pixMap.save("/Users/tobi/Desktop/stage.png");
 }
 
 void ImageViewer::setLoadingMosaicAt(const GridPoint p)
