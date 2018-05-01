@@ -38,3 +38,9 @@ HEADERS += \
 FORMS += \
         mainwindow.ui \
     imageviewer.ui
+
+RESOURCES += \
+    assets.qrc
+
+DISTFILES += \
+    default.qss
