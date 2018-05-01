@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>assets/resolution.png</file>
+        <file>assets/base_image.png</file>
+        <file>assets/images_folder.png</file>
+        <file>assets/download.png</file>
+        <file>assets/generate.png</file>
+        <file>assets/down.png</file>
+        <file>assets/up.png</file>
+        <file>assets/info.png</file>
+    </qresource>
+    <qresource prefix="/styles">
+        <file>default.qss</file>
+    </qresource>
+</RCC>
