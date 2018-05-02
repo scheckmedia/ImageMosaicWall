@@ -24,6 +24,7 @@ public:
 
 private:
     void updateStatus();
+    void enableDisableUi(bool enabled);
 
 signals:
     void mosaicCalculationFinished(QMap<GridPoint, QImage>&);
@@ -35,10 +36,9 @@ public slots:
     void onMosaicCreationFinished();
 
 private slots:
-    void on_pushButton_clicked();
     void on_btnGenerate_clicked();
-
     void on_btnSave_clicked();
+    void on_btnSetImageFolder_clicked();
 
 private:
     Ui::MainWindow *ui;

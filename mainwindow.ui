@@ -118,7 +118,7 @@
             </widget>
            </item>
            <item alignment="Qt::AlignHCenter">
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="btnSetImageFolder">
              <property name="minimumSize">
               <size>
                <width>200</width>
@@ -217,7 +217,7 @@
                 <enum>QAbstractSpinBox::UpDownArrows</enum>
                </property>
                <property name="maximum">
-                <number>100</number>
+                <number>20</number>
                </property>
               </widget>
              </item>

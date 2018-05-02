@@ -40,13 +40,29 @@ MainWindow::~MainWindow()
 void MainWindow::updateStatus()
 {
     QString imageInfo  = QString("<b style=\"text-indent: 100px\">%1</b> %2x%3").arg(tr("Image Resolution:")).arg(m_baseImage.width()).arg(m_baseImage.height());
-    QString folderInfo = QString("<b style=\"text-indent: 100px\">%1</b> %2").arg(tr("Images in Folder:")).arg(m_imageProcessing.getGridColorMap().size());
+    QString folderInfo = QString("<b style=\"text-indent: 100px\">%1</b> %2").arg(tr("Images in Folder:")).arg(m_imageProcessing.getImageMeanMap().size());
 
     ui->lblStatus->setText(QString("%1<br/>%2").arg(imageInfo).arg(folderInfo));
 
     if(m_baseImage.width() > 0 && m_baseImage.height())
         ui->btnSetResolution->setEnabled(true);
 }
+
+void MainWindow::enableDisableUi(bool enabled)
+{
+    ui->btnGenerate->setEnabled(enabled);
+    ui->btnLoad->setEnabled(enabled);
+    ui->btnSave->setEnabled(enabled);
+    ui->btnSetResolution->setEnabled(enabled);
+    ui->btnSetImageFolder->setEnabled(enabled);
+
+    ui->sbCols->setEnabled(enabled);
+    ui->sbRows->setEnabled(enabled);
+    ui->sbHeight->setEnabled(enabled);
+    ui->sbWidth->setEnabled(enabled);
+    ui->sbHistory->setEnabled(enabled);
+}
+
 
 void MainWindow::on_btnLoad_clicked()
 {
@@ -106,7 +122,40 @@ void MainWindow::onMosaicCreationFinished()
     delete m_mosaicGeneration;
 }
 
-void MainWindow::on_pushButton_clicked()
+
+void MainWindow::on_btnGenerate_clicked()
+{
+    enableDisableUi(false);
+    m_imageView.clearMosaics();
+    m_mappedImages.clear();
+    m_mosaicGeneration = QThread::create([&]{
+        QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
+
+        m_imageProcessing.moveToThread(this->thread());
+        bool success = m_imageProcessing.generateImage(m_baseImage.size(), gridSize, ui->sbHistory->value(), &m_mappedImages);
+
+        if(!success)
+            return;
+
+        qDebug() << "result generate image: " << success << " dstSize: " << m_mappedImages.size() ;
+        //emit iv.get()->setMosaicImages(m_mappedImages);
+        enableDisableUi(true);
+
+    });
+    connect(m_mosaicGeneration, SIGNAL(finished()), this, SLOT(onMosaicCreationFinished()));
+    m_mosaicGeneration->start();
+}
+
+void MainWindow::on_btnSave_clicked()
+{
+    QString defaultFileExtension = "PNG (*.png)";
+    QString filename = QFileDialog::getSaveFileName(this, "Save Mosaic Image",
+                                 QDir::homePath(),
+                                 tr("JPEG (*.jpg);;PNG (*.png)"), &defaultFileExtension);
+    m_imageProcessing.getOutputImage().save(filename);
+}
+
+void MainWindow::on_btnSetImageFolder_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this, tr("Load Images Folder"), QDir::homePath());
 
@@ -125,34 +174,4 @@ void MainWindow::on_pushButton_clicked()
         ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
         updateStatus();
     });
-
-}
-
-
-void MainWindow::on_btnGenerate_clicked()
-{
-    m_mappedImages.clear();
-    m_mosaicGeneration = QThread::create([&]{
-        QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
-
-        m_imageProcessing.moveToThread(this->thread());
-        bool success = m_imageProcessing.generateImage(m_baseImage.size(), gridSize, ui->sbHistory->value(), &m_mappedImages);
-
-        if(!success)
-            return;
-
-        qDebug() << "result generate image: " << success << " dstSize: " << m_mappedImages.size() ;
-        //emit iv.get()->setMosaicImages(m_mappedImages);
-    });
-    connect(m_mosaicGeneration, SIGNAL(finished()), this, SLOT(onMosaicCreationFinished()));
-    m_mosaicGeneration->start();
-}
-
-void MainWindow::on_btnSave_clicked()
-{
-    QString defaultFileExtension = "PNG (*.png)";
-    QString filename = QFileDialog::getSaveFileName(this, "Save Mosaic Image",
-                                 QDir::homePath(),
-                                 tr("JPEG (*.jpg);;PNG (*.png)"), &defaultFileExtension);
-    m_imageProcessing.getOutputImage().save(filename);
 }
