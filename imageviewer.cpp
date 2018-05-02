@@ -27,6 +27,14 @@ ImageViewer::~ImageViewer()
     delete ui;
 }
 
+void ImageViewer::clearMosaics()
+{
+    for(QGraphicsItem* item : m_mosaicImages->childItems())
+    {
+        delete item;
+    }
+}
+
 void ImageViewer::wheelEvent(QWheelEvent *event)
 {
     const QPointF p0scene = mapToScene(event->pos());
@@ -51,10 +59,7 @@ void ImageViewer::setImage(QImage img)
 
 void ImageViewer::setImage(QImage img, QSize resolution)
 {
-    for(QGraphicsItem* item : m_mosaicImages->childItems())
-    {
-        delete item;
-    }
+    clearMosaics();
 
 
     qDebug() << sceneRect();
@@ -74,10 +79,7 @@ void ImageViewer::setImage(QImage img, QSize resolution)
 
 void ImageViewer::setGrid(QSize gridResolution)
 {
-    for(QGraphicsItem* item : m_mosaicImages->childItems())
-    {
-        delete item;
-    }
+    clearMosaics();
 
     m_gridResolution = gridResolution;
     double gx = m_image.width() / (double)gridResolution.width();
@@ -108,19 +110,8 @@ void ImageViewer::setGrid(QSize gridResolution)
 
 void ImageViewer::setMosaicImages(QMap<GridPoint, QImage> &images)
 {        
-
-    qDebug() << "in setMosiac...";
     setMosaicLoadingDone();
-    if(m_mosaicImages != nullptr)
-    {
-        for(QGraphicsItem* item : m_mosaicImages->childItems())
-        {
-            delete item;
-        }
-    }
-
-    qDebug() << " m_mosaicImages: " << m_mosaicImages;
-
+    clearMosaics();
 
     double gx = m_image.width() / (double)m_gridResolution.width();
     double gy = m_image.height() / (double)m_gridResolution.height();

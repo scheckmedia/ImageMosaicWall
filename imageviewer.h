@@ -23,6 +23,7 @@ public:
     explicit ImageViewer(QWidget *parent = 0);
     ~ImageViewer();
 
+    void clearMosaics();
     void wheelEvent(QWheelEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
