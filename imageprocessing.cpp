@@ -133,9 +133,10 @@ void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize
     QVector<QString> history;
     int g = pos;
 
+
     for(; g < pos + length; ++g)
     {
-
+        history.clear();
         double bestDistance = INT_MAX;
         QString imagePath;
         QColor cellMean = m_gridColorMap.at(g);
@@ -144,6 +145,24 @@ void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize
         GridPoint p;
         p.setX(g % gridSize.width());
         p.setY(g / gridSize.width());
+
+        for(int kx = -m_historySize; kx <= m_historySize; ++kx)
+        {
+            for(int ky = -m_historySize; ky <= m_historySize; ++ky)
+            {
+                GridPoint pDelta(p.x() + kx, p.y() + ky);
+
+                if(pDelta.x() < 0 || pDelta.x() > gridSize.width() - 1)
+                    continue;
+
+                if(pDelta.y() < 0 || pDelta.y() > gridSize.height() - 1)
+                    continue;
+
+
+                if(m_gridMapCache.contains(pDelta))
+                    history.push_back(m_gridMapCache.value(pDelta));
+            }
+        }
 
         for(auto &image : m_imageMeanMap.keys())
         {
@@ -159,14 +178,16 @@ void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize
             }
         }
 
-        history.push_back(imagePath);
+        //history.push_back(imagePath);
+        //if(history.size() > m_historySize)
+        //      history.clear();
 
-        if(history.size() > m_historySize)
-            history.clear();        
 
         QMutexLocker lock(&m_lockMean);
         QImage cellImage = QImage(imagePath).scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation).copy(QRect(QPoint(0, 0), cellSize));
         dstMap->insert(p, cellImage);
+        m_gridMapCache.insert(p, imagePath);
+        lock.unlock();
         emit mosaicGenerated(p);
 
         double gx = m_outputImage.get()->width() / (double)gridSize.width();
@@ -191,6 +212,11 @@ double ImageProcessing::calculateDistance(QColor rhs, QColor lhs) const
 double ImageProcessing::calculateDistance(ColorLab rhs, ColorLab lhs) const
 {
     return abs(rhs.L - lhs.L) + abs(rhs.a - lhs.a) + abs(rhs.b - lhs.b);
+}
+
+QMap<QString, QColor> ImageProcessing::getImageMeanMap() const
+{
+    return m_imageMeanMap;
 }
 
 const QImage& ImageProcessing::getOutputImage() const

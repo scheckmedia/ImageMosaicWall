@@ -51,6 +51,7 @@ private:
 private:
    std::vector<QColor> m_gridColorMap;
    QMap<QString, QColor> m_imageMeanMap;
+   QMap<GridPoint, QString> m_gridMapCache;
    QMutex m_lockMean;
    QSize m_outputSize;
    std::unique_ptr<QImage> m_outputImage;
@@ -74,6 +75,7 @@ public:
     std::vector<QColor> getGridColorMap() const;
 
     const QImage& getOutputImage() const;
+    QMap<QString, QColor> getImageMeanMap() const;
 };
 
 
