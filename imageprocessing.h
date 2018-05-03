@@ -9,6 +9,7 @@
 #include <math.h>
 #include <QPoint>
 #include <QMetaType>
+#include <QPainter>
 
 struct ColorXYZ {
     double X, Y, Z;

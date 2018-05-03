@@ -5,7 +5,6 @@
 ImageProcessing::ImageProcessing(QObject *parent)
     : QObject(parent)
 {
-
 }
 
 ImageProcessing::~ImageProcessing()
@@ -38,8 +37,7 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
     int itemsPerThread = numCells / maxThreads;
     QThreadPool pool;
 
-    m_outputImage = std::unique_ptr<QImage>(new QImage(outputSize, QImage::Format_ARGB32));
-
+    m_outputImage = std::unique_ptr<QImage>(new QImage(outputSize, QImage::Format_ARGB32));    
 
     int numCellsPerThread = itemsPerThread;
     for(int t = 0; t < maxThreads; ++t)
@@ -52,7 +50,7 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
         QtConcurrent::run(&pool, this, &ImageProcessing::mapImageForMean, gridCellSize, gridSize, dst, t * numCellsPerThread, numCellsPerThread);
     }
 
-    pool.waitForDone();
+    pool.waitForDone();    
     return true;
 }
 
@@ -178,13 +176,8 @@ void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize
             }
         }
 
-        //history.push_back(imagePath);
-        //if(history.size() > m_historySize)
-        //      history.clear();
-
-
         QMutexLocker lock(&m_lockMean);
-        QImage cellImage = QImage(imagePath).scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation).copy(QRect(QPoint(0, 0), cellSize));
+        QImage cellImage = QImage(imagePath).scaled(cellSize + QSize(2,2), Qt::KeepAspectRatioByExpanding, Qt::FastTransformation).copy(QRect(QPoint(0, 0), cellSize + QSize(2,2)));
         dstMap->insert(p, cellImage);
         m_gridMapCache.insert(p, imagePath);
         lock.unlock();
@@ -193,12 +186,13 @@ void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize
         double gx = m_outputImage.get()->width() / (double)gridSize.width();
         double gy = m_outputImage.get()->height() / (double)gridSize.height();
 
-        for(int y = 0; y < cellSize.height(); ++y)
+        for(int y = 0; y < cellImage.height(); ++y)
         {
-            for(int x = 0; x < cellSize.width(); ++x)
+            for(int x = 0; x < cellImage.width(); ++x)
             {
                 auto const pixel = cellImage.pixel(x, y);
                 m_outputImage.get()->setPixel(round(p.x() * gx + x), round(p.y() * gy + y), pixel);
+
             }
         }
     }
