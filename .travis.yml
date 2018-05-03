@@ -51,5 +51,5 @@ deploy:
   file_glob: true
   skip_clean: true
   on:
-    #tags: true
+    tags: true
     repo: scheckmedia/ImageMosaicWall
