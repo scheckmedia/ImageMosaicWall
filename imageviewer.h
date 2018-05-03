@@ -4,6 +4,7 @@
 #include "imageprocessing.h"
 #include <QWidget>
 #include <QWheelEvent>
+#include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QGraphicsItemGroup>
 
@@ -14,6 +15,10 @@ class ImageViewer;
 class ImageViewer : public QGraphicsView
 {
     Q_OBJECT
+
+signals:
+    void imageDropped(QString path);
+    void folderDropped(QString path);
 
 public slots:
     void setLoadingMosaicAt(const GridPoint);
@@ -30,9 +35,12 @@ public:
     void setImage(QImage img);
     void setImage(QImage img, QSize resolution);
     void setGrid(QSize gridResolution);
-    void setMosaicLoadingDone();
+    void setMosaicLoadingDone();    
 
-private:
+protected:
+    void dragEnterEvent(QDragEnterEvent *) override;
+    void dropEvent(QDropEvent *) override;
+    void dragMoveEvent(QDragMoveEvent *) override;
 
 
 private:

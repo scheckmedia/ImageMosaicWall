@@ -25,15 +25,20 @@ public:
 private:
     void updateStatus();
     void enableDisableUi(bool enabled);
+    void loadImage(QString&);
+    void loadImageFolder(QString&);
 
 signals:
     void mosaicCalculationFinished(QMap<GridPoint, QImage>&);
+
 
 public slots:    
     void on_btnLoad_clicked();
     void onGridPropsValueChanged();
     void onOutputResolutionChanged();
     void onMosaicCreationFinished();
+    void onImageDropped(QString image);
+    void onFolderDropped(QString folder);
 
 private slots:
     void on_btnGenerate_clicked();

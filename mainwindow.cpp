@@ -21,15 +21,16 @@ MainWindow::MainWindow(QWidget *parent) :
     QString styleSheet = QLatin1String(file.readAll());
     setStyleSheet(styleSheet);
 
-    ui->wImageContainer->layout()->addWidget(&m_imageView);
-    qDebug() << ui->wImageContainer->layout()->objectName();
+    ui->wImageContainer->layout()->addWidget(&m_imageView);    
 
     qRegisterMetaType<GridPoint>("GridPoint");
     connect(ui->sbRows, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
     connect(ui->sbCols, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
     connect(ui->btnSetResolution, SIGNAL(clicked(bool)), this, SLOT(onOutputResolutionChanged()));
     connect(&m_imageProcessing, &ImageProcessing::mosaicGenerated, &m_imageView, &ImageViewer::setLoadingMosaicAt);
-    connect(this, &MainWindow::mosaicCalculationFinished, &m_imageView, &ImageViewer::setMosaicImages);
+    connect(this, &MainWindow::mosaicCalculationFinished, &m_imageView, &ImageViewer::setMosaicImages);    
+    connect(&m_imageView, &ImageViewer::folderDropped, this, &MainWindow::onFolderDropped);
+    connect(&m_imageView, &ImageViewer::imageDropped, this, &MainWindow::onImageDropped);
 }
 
 MainWindow::~MainWindow()
@@ -63,15 +64,16 @@ void MainWindow::enableDisableUi(bool enabled)
     ui->sbHistory->setEnabled(enabled);
 }
 
-
-void MainWindow::on_btnLoad_clicked()
+void MainWindow::loadImage(QString &filename)
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Open Image"),  QDir::homePath(), tr("ImageFiles (*.png *.jpg *bmp)"));
-
     if (filename.isEmpty())
-        return;    
+        return;
 
     m_baseImage = QImage(filename);
+
+    if(m_baseImage.isNull())
+        return;
+
     updateStatus();
 
     ui->sbWidth->setValue(m_baseImage.width());
@@ -86,6 +88,34 @@ void MainWindow::on_btnLoad_clicked()
         m_imageProcessing.processGrid(m_baseImage, gridSize);
         ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
     });
+}
+
+void MainWindow::loadImageFolder(QString &path)
+{
+    QStringList filter = QStringList() << "*.png" << "*.jpg" << "*.jpeg" << "*.bmp";
+    QDirIterator iterator(path, filter, QDir::Files, QDirIterator::Subdirectories);
+
+    QList<QString> imageList;
+    while(iterator.hasNext())
+    {
+        iterator.next();
+        imageList.append(iterator.filePath());
+    }
+
+    QtConcurrent::run([=]() {
+        m_imageProcessing.processMosaicImages(imageList);
+        ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
+        updateStatus();
+    });
+}
+
+
+
+
+void MainWindow::on_btnLoad_clicked()
+{
+    QString filename = QFileDialog::getOpenFileName(this, tr("Open Image"),  QDir::homePath(), tr("ImageFiles (*.png *.jpg *bmp)"));
+    loadImage(filename);
 }
 
 void MainWindow::onGridPropsValueChanged()
@@ -120,6 +150,16 @@ void MainWindow::onMosaicCreationFinished()
     emit mosaicCalculationFinished(m_mappedImages);
     ui->btnSave->setEnabled(true);
     delete m_mosaicGeneration;
+}
+
+void MainWindow::onImageDropped(QString image)
+{
+    loadImage(image);
+}
+
+void MainWindow::onFolderDropped(QString folder)
+{
+    loadImageFolder(folder);
 }
 
 
@@ -158,20 +198,5 @@ void MainWindow::on_btnSave_clicked()
 void MainWindow::on_btnSetImageFolder_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this, tr("Load Images Folder"), QDir::homePath());
-
-    QStringList filter = QStringList() << "*.png" << "*.jpg" << "*.jpeg" << "*.bmp";
-    QDirIterator iterator(path, filter, QDir::Files, QDirIterator::Subdirectories);
-
-    QList<QString> imageList;
-    while(iterator.hasNext())
-    {
-        iterator.next();
-        imageList.append(iterator.filePath());
-    }
-
-    QtConcurrent::run([=]() {
-        m_imageProcessing.processMosaicImages(imageList);
-        ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
-        updateStatus();
-    });
+    loadImageFolder(path);
 }

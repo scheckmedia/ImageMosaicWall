@@ -4,12 +4,14 @@
 #include <QGraphicsPixmapItem>
 #include <QScrollBar>
 #include <qmath.h>
+#include <QImageReader>
 
 ImageViewer::ImageViewer(QWidget *parent) :
     QGraphicsView(parent),    
     ui(new Ui::ImageViewer)
 {
     ui->setupUi(this);
+    setAcceptDrops(true);
     QGraphicsScene *scene = new QGraphicsScene(this);
     setScene(scene);
 
@@ -172,3 +174,28 @@ void ImageViewer::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
+void ImageViewer::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    }
+}
+
+void ImageViewer::dragMoveEvent(QDragMoveEvent* /*event*/)
+{
+
+}
+
+void ImageViewer::dropEvent(QDropEvent * event)
+{
+    const QMimeData* mimeData = event->mimeData();
+    if (mimeData->hasUrls())
+    {
+        QFileInfo info(mimeData->urls().first().path());
+
+        if (info.isDir())
+            emit folderDropped(info.path());
+        else if (info.isFile() && QImageReader::imageFormat(info.absoluteFilePath()).isEmpty() == false)
+            emit imageDropped(info.absoluteFilePath());
+    }
+}
