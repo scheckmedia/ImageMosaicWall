@@ -19,6 +19,7 @@ struct ColorLab {
     double L, a, b;
 };
 
+
 struct GridPoint : public QPoint
 {
     GridPoint() : QPoint(){};
@@ -42,12 +43,29 @@ class ImageProcessing : public QObject
 
    Q_OBJECT
 
+public:
+    explicit ImageProcessing(QObject *parent = 0);
+    ~ImageProcessing();
+
+    void processGrid(const QImage&, QSize);
+    void processMosaicImages(const QList<QString>&);
+    bool generateImage(QSize, QSize, int);
+    bool isReady();
+
+signals:
+    void mosaicGenerated(const GridPoint);
+
 private:
    void calculateGridCellsMean(const QImage&, const QSize&, const QSize&, std::vector<QColor>&, int, int);
    void calculateImageMeanMap(const QList<QString>&);
-   void mapImageForMean(const QSize, const QSize, QMap<GridPoint,QImage>*, const int, const int);
+   void calculateMosaicPositions(const QSize, const QSize, const int, const int);
    double calculateDistance(QColor rhs, QColor lhs) const;
    double calculateDistance(ColorLab rhs, ColorLab lhs) const;
+
+public:
+    std::vector<QColor> getGridColorMap() const;
+    const QImage& getOutputImage() const;
+    QMap<QString, QColor> getImageMeanMap() const;
 
 private:
    std::vector<QColor> m_gridColorMap;
@@ -57,33 +75,15 @@ private:
    QSize m_outputSize;
    std::unique_ptr<QImage> m_outputImage;
    int m_historySize;
-
-
-signals:
-    void mosaicGenerated(const GridPoint);
-
-
-
-public:
-    explicit ImageProcessing(QObject *parent = 0);
-    ~ImageProcessing();
-
-    void processGrid(const QImage&, QSize);
-    void processMosaicImages(const QList<QString>&);
-    bool generateImage(QSize, QSize, int, QMap<GridPoint, QImage>*);
-    bool isReady();
-
-    std::vector<QColor> getGridColorMap() const;
-
-    const QImage& getOutputImage() const;
-    QMap<QString, QColor> getImageMeanMap() const;
 };
 
 
-
-
-// @see http://www.easyrgb.com/en/math.php
-
+/**
+ * @brief Converts q QColor (RGB) to XYZ
+ * @see http://www.easyrgb.com/en/math.php
+ * @param color RGB Color
+ * @return XYZ Color
+ */
 inline ColorXYZ toXYZ(QColor & color)
 {
     double r = color.redF();
@@ -112,6 +112,14 @@ inline ColorXYZ toXYZ(QColor & color)
     return xyz;
 }
 
+
+/**
+ * @brief Converts QColor (RGB) to L*ab
+ * The reference white point is D65
+ * @see http://www.easyrgb.com/en/math.php
+ * @param color RGB Color
+ * @return L*ab Color
+ */
 inline ColorLab toLab(QColor & color)
 {
     // d65 white point

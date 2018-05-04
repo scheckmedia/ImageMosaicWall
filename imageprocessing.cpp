@@ -18,7 +18,7 @@ void ImageProcessing::processMosaicImages(const QList<QString> &imageList)
     calculateImageMeanMap(imageList);
 }
 
-bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int history, QMap<GridPoint,QImage>* dst)
+bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int history)
 {
     if(!isReady())
         return false;
@@ -47,7 +47,7 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
             numCellsPerThread += numCells % maxThreads;
         }
 
-        QtConcurrent::run(&pool, this, &ImageProcessing::mapImageForMean, gridCellSize, gridSize, dst, t * numCellsPerThread, numCellsPerThread);
+        QtConcurrent::run(&pool, this, &ImageProcessing::calculateMosaicPositions, gridCellSize, gridSize, t * numCellsPerThread, numCellsPerThread);
     }
 
     pool.waitForDone();    
@@ -68,12 +68,16 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage, const QSiz
 
         for(int y = 0; y < gridCellSize.height(); ++y)
         {
+            ny = y + gy;
+            if(ny >= baseImage.height() || ny < 0)
+                continue;
+
+
             for(int x = 0; x < gridCellSize.width(); ++x)
             {
-                nx = x + gx;
-                ny = y + gy;
+                nx = x + gx;                
 
-                if(nx < 0 || nx >= baseImage.width() || ny >= baseImage.height() || ny < 0)
+                if(nx < 0 || nx >= baseImage.width())
                     continue;
 
                 QColor c = baseImage.pixelColor(nx, ny);
@@ -126,7 +130,7 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList)
     QtConcurrent::map(imageList, scale).waitForFinished();
 }
 
-void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize, QMap<GridPoint,QImage>* dstMap, const int pos, const int length)
+void ImageProcessing::calculateMosaicPositions(const QSize cellSize, const QSize gridSize, const int pos, const int length)
 {
     QVector<QString> history;
     int g = pos;
@@ -177,21 +181,30 @@ void ImageProcessing::mapImageForMean(const QSize cellSize, const QSize gridSize
         }
 
         QMutexLocker lock(&m_lockMean);
-        QImage cellImage = QImage(imagePath).scaled(cellSize + QSize(2,2), Qt::KeepAspectRatioByExpanding, Qt::FastTransformation).copy(QRect(QPoint(0, 0), cellSize + QSize(2,2)));
-        dstMap->insert(p, cellImage);
+        QImage cellImage = QImage(imagePath).scaled(cellSize + QSize(2,2), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation).copy(QRect(QPoint(0, 0), cellSize + QSize(2,2)));
         m_gridMapCache.insert(p, imagePath);
         lock.unlock();
         emit mosaicGenerated(p);
 
         double gx = m_outputImage.get()->width() / (double)gridSize.width();
         double gy = m_outputImage.get()->height() / (double)gridSize.height();
+        int nx = 0;
+        int ny = 0;
 
         for(int y = 0; y < cellImage.height(); ++y)
         {
+            ny = round(p.y() * gy + y);
+            if (ny < 0 || ny >= m_outputImage->height())
+                continue;
+
             for(int x = 0; x < cellImage.width(); ++x)
             {
+                nx = round(p.x() * gx + x);
+                if(nx < 0 || nx >= m_outputImage->width())
+                    continue;
+
                 auto const pixel = cellImage.pixel(x, y);
-                m_outputImage.get()->setPixel(round(p.x() * gx + x), round(p.y() * gy + y), pixel);
+                m_outputImage.get()->setPixel(nx, ny, pixel);
 
             }
         }
