@@ -201,7 +201,7 @@
              <item>
               <widget class="QLabel" name="label_9">
                <property name="text">
-                <string>History</string>
+                <string>Unique Cells</string>
                </property>
               </widget>
              </item>
@@ -608,7 +608,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>

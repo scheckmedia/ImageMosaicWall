@@ -3,9 +3,11 @@
 
 #include <QMainWindow>
 #include <QImage>
+#include <QMovie>
 #include <QtConcurrent>
 #include <QFutureWatcher>
 #include <QMap>
+#include <QPushButton>
 #include "imageviewer.h"
 #include "imageprocessing.h"
 
@@ -24,9 +26,10 @@ public:
 
 private:
     void updateStatus();
-    void enableDisableUi(bool enabled);
+    void enableEnableUi(bool enabled);
     void loadImage(QString&);
     void loadImageFolder(QString&);
+    void setLoadingState(QPushButton &btn, bool isLoading);
 
 signals:
     void mosaicCalculationFinished(QMap<GridPoint, QImage>&);
@@ -51,8 +54,9 @@ private:
     ImageProcessing m_imageProcessing;
     ImageViewer m_imageView;
     QFutureWatcher<QRgb> *m_imageScaling;
-    QThread *m_mosaicGeneration;
-    QMap<GridPoint, QImage> m_mappedImages;
+    QThread *m_mosaicGeneration;    
+    QMap<QString, QIcon> m_activeLoadingButtons;
+    QMovie m_loadingSequence;
 };
 
 #endif // MAINWINDOW_H
