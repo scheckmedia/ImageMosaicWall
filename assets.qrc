@@ -8,6 +8,7 @@
         <file>assets/down.png</file>
         <file>assets/up.png</file>
         <file>assets/info.png</file>
+        <file>assets/loader.gif</file>
     </qresource>
     <qresource prefix="/styles">
         <file>default.qss</file>
