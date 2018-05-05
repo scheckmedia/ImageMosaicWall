@@ -9,6 +9,9 @@
         <file>assets/up.png</file>
         <file>assets/info.png</file>
         <file>assets/loader.gif</file>
+        <file>assets/home.png</file>
+        <file>assets/zoom_in.png</file>
+        <file>assets/zoom_out.png</file>
     </qresource>
     <qresource prefix="/styles">
         <file>default.qss</file>
