@@ -20,9 +20,10 @@ MainWindow::MainWindow(QWidget *parent)
     QFile file(":/styles/default.qss");
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
-    setStyleSheet(styleSheet);
+    setStyleSheet(styleSheet);    
 
     ui->wImageContainer->layout()->addWidget(&m_imageView);        
+    //ui->wControls->move(this->size().width() - 400, this->size().height() - 50);
 
     qRegisterMetaType<GridPoint>("GridPoint");
     connect(ui->sbRows, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
@@ -91,11 +92,17 @@ void MainWindow::loadImage(QString &filename)
     m_imageView.setImage(m_baseImage);
     m_imageView.setGrid(gridSize);
 
-    QtConcurrent::run([=]() {
-        m_imageProcessing.processGrid(m_baseImage, gridSize);
-        ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
-        setLoadingState(*ui->btnLoad, false);
+    QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
+    QFuture<void> f = QtConcurrent::run([=]() {
+        m_imageProcessing.processGrid(m_baseImage, gridSize);        
     });
+
+    connect(watcher, &QFutureWatcher<void>::finished, [=]() {
+       ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
+       setLoadingState(*ui->btnLoad, false);
+       watcher->deleteLater();
+    });
+    watcher->setFuture(f);
 }
 
 void MainWindow::loadImageFolder(QString &path)
