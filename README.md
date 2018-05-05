@@ -10,4 +10,4 @@ This application allows you to create an image based on a bunch of other images.
 - [x] floating point precision bug - there is something wrong with some grid resolutions and the output image. It contains blank pixels at the and of the image. But otherwise if I use floating point numbers there are gaps between the mosaic images)
 - [x] TravisCI configuration for building this app for OS X, Linux ~~and maybe Windows~~?
 - [x] loading indicator for "Load Base Image" & "Set Image Folder"
-- [ ] extract Thumbnails from Exif instead down sampling the whole image
+- [x] extract Thumbnails from Exif instead down sampling the whole image
