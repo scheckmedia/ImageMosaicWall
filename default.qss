@@ -16,6 +16,10 @@ QMainWindow {
   color: #989899;
 }
 
+#wControls {
+  background-color: #bb333333;
+}
+
 #ImageViewer {
   background-color: #515151;
 }
