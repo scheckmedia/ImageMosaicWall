@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui concurrent
+QT       += core gui concurrent multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -22,6 +22,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+
+
 CONFIG += c++11
 SOURCES += \
         main.cpp \
@@ -35,6 +37,7 @@ HEADERS += \
     imageviewer.h \
     imageprocessing.h
 
+
 FORMS += \
         mainwindow.ui \
     imageviewer.ui
@@ -44,3 +47,16 @@ RESOURCES += \
 
 DISTFILES += \
     default.qss
+
+macx: {
+  # I dont know why the hack this lines not working.. so then we get the ugly absolute path
+  INCLUDEPATH += /usr/local/include/
+  DEPENDPATH += /usr/local/include/
+  LIBS += -L /usr/local/lib/ -lexiv2  
+}
+
+linux: {
+  INCLUDEPATH += /usr/include/
+  DEPENDPATH += /usr/include/
+  LIBS += -L /usr/lib/x86_64-linux-gnu/ -lexiv2
+}
