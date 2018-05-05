@@ -22,6 +22,8 @@ signals:
 
 public slots:
     void setLoadingMosaicAt(const GridPoint);
+    void zoomIn();
+    void zoomOut();
 
 public:
     explicit ImageViewer(QWidget *parent = 0);
@@ -31,11 +33,13 @@ public:
     void wheelEvent(QWheelEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent*) override;
     void setImage(const QImage& img);
     void setImage(const QImage& img, QSize resolution);
     void setPreview(const QImage& img);
     void setGrid(QSize gridResolution);
     void setMosaicLoadingDone();
+    void resizeEvent(QResizeEvent*) override;
 
 private:
     void fitToScene(const QImage &);

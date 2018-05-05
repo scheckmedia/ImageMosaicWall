@@ -21,7 +21,13 @@ ImageViewer::ImageViewer(QWidget *parent) :
     m_preview = new QGraphicsPixmapItem(m_image);
     scene->addItem(m_image);
 
-    m_mosaicLoading->setZValue(10);
+    m_mosaicLoading->setZValue(10);    
+
+    connect(ui->btnZoomIn, &QPushButton::clicked, this, &ImageViewer::zoomIn);
+    connect(ui->btnZoomOut, &QPushButton::clicked, this, &ImageViewer::zoomOut);
+    connect(ui->btnHome, &QPushButton::clicked, [=]() {
+        fitToScene(m_baseImage);
+    });
 }
 
 ImageViewer::~ImageViewer()
@@ -50,6 +56,7 @@ void ImageViewer::wheelEvent(QWheelEvent *event)
     double f = transform().m11();
     qDebug() << transform() << " m1: " << f << scene()->width() * f;
     qDebug() << "zoom: " << (f * (double)m_baseImage.size().width()) << (f * (double)m_baseImage.size().height() );
+    qDebug() << "zoom 2: " << (factor);
 }
 
 void ImageViewer::fitToScene(const QImage &img)
@@ -132,12 +139,40 @@ void ImageViewer::setLoadingMosaicAt(const GridPoint p)
     m_mosaicLoading->addToGroup(item);
 }
 
+void ImageViewer::zoomIn()
+{
+    double delta = 0.10;
+    double t = transform().m11() + delta;
+    double zoomLevel = delta * floor(t / delta + 0.5);
+
+    setTransform(QTransform(zoomLevel, 0, 0, 0, zoomLevel, 0, 0, 0, 1));
+}
+
+void ImageViewer::zoomOut()
+{
+    double delta = 0.10;
+    double t = transform().m11() - delta;
+    double zoomLevel = (delta * floor(t / delta + 0.5));
+
+    if(zoomLevel > 0)
+    {
+        setTransform(QTransform(zoomLevel, 0, 0, 0, zoomLevel, 0, 0, 0, 1));
+        qDebug() << "out: " << zoomLevel;
+    }
+}
+
 void ImageViewer::setMosaicLoadingDone()
 {
     for(QGraphicsItem *p : m_mosaicLoading->childItems())
     {
         delete p;
     }
+}
+
+void ImageViewer::resizeEvent(QResizeEvent *)
+{
+    QSize s = ui->wControls->size();
+    ui->wControls->move(this->width() - s.width() - 10, this->height() - s.height() - 10);
 }
 
 void ImageViewer::mousePressEvent(QMouseEvent *event)
@@ -155,6 +190,12 @@ void ImageViewer::mouseMoveEvent(QMouseEvent *event)
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() + off.x() * acceleration);
         verticalScrollBar()->setValue(verticalScrollBar()->value() + off.y() * acceleration);
     }
+}
+
+void ImageViewer::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    if(event->button() == Qt::LeftButton)
+        fitToScene(m_baseImage);
 }
 
 void ImageViewer::dragEnterEvent(QDragEnterEvent* event)
