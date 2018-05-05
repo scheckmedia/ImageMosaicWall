@@ -148,4 +148,7 @@ inline ColorLab toLab(QColor & color)
     return lab;
 }
 
+
+QImage extractThumbnail(const QString&, QSize);
+
 #endif // IMAGEPROCESSOR_H

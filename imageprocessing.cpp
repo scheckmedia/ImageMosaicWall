@@ -1,6 +1,9 @@
 #include "imageprocessing.h"
+#include <QImageReader>
+#include <QMediaObject>
 #include <QDebug>
 #include <QImage>
+#include <exiv2/exiv2.hpp>
 
 ImageProcessing::ImageProcessing(QObject *parent)
     : QObject(parent)
@@ -99,7 +102,10 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList)
 {
     QMutex mutex;
     std::function<void(const QString)> scale = [&](const QString imageFileName) {
-        QImage image(imageFileName);
+        QImage image = extractThumbnail(imageFileName, QSize(128, 128));
+        if(image.isNull())
+            image = QImage(imageFileName);
+
 
         int meanR = 0;
         int meanG = 0;
@@ -272,4 +278,35 @@ std::vector<QColor> ImageProcessing::getGridColorMap() const
 bool ImageProcessing::isReady()
 {
     return !(m_gridColorMap.size() == 0 || m_imageMeanMap.size() == 0);
+}
+
+QImage extractThumbnail(const QString &filename, QSize minSize)
+{
+    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(filename.toStdString());
+    image->readMetadata();
+
+    Exiv2::PreviewManager loader(*image);
+    Exiv2::PreviewPropertiesList list = loader.getPreviewProperties();
+
+    if (list.empty())
+        return QImage();
+
+    QSize bestSize(-1, -1);
+
+    Exiv2::PreviewProperties previewProperty;
+    for (const auto &previewItem : list)
+    {
+        if(previewItem.width_ < minSize.width() || previewItem.height_ < minSize.height())
+            continue;
+
+        if (previewItem.width_ < bestSize.width() || previewItem.height_ < bestSize.height())
+        {
+            previewProperty = previewItem;
+            bestSize.setWidth(previewItem.width_);
+            bestSize.setHeight(previewItem.height_);
+        }
+    }
+
+    Exiv2::PreviewImage preview = loader.getPreviewImage(previewProperty);
+    return QImage::fromData(preview.pData(), preview.size());
 }
