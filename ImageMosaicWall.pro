@@ -48,6 +48,8 @@ RESOURCES += \
 DISTFILES += \
     default.qss
 
+ICON = assets/imw-logo.icns
+
 macx: {
   # I dont know why the hack this lines not working.. so then we get the ugly absolute path
   INCLUDEPATH += /usr/local/include/
