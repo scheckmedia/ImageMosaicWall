@@ -1,6 +1,5 @@
 #include "imageprocessing.h"
 #include <QImageReader>
-#include <QMediaObject>
 #include <QDebug>
 #include <QImage>
 #include <exiv2/exiv2.hpp>
