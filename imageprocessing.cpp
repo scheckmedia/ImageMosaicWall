@@ -185,8 +185,13 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize, const QSize
             }
         }
 
+        QImage image = extractThumbnail(imagePath, cellSize);
+        if(image.isNull())
+            image = QImage(imagePath);
+
+        QImage cellImage = image.scaled(cellSize + QSize(2,2), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation).copy(QRect(QPoint(0, 0), cellSize + QSize(2,2)));
+
         QMutexLocker lock(&m_lockMean);
-        QImage cellImage = QImage(imagePath).scaled(cellSize + QSize(2,2), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation).copy(QRect(QPoint(0, 0), cellSize + QSize(2,2)));
         m_gridMapCache.insert(p, imagePath);
         lock.unlock();
         emit mosaicGenerated(p);
