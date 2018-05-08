@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Image Mosaic Wall
+Comment=Create a Mosaic Image Wall from a set of images
+Exec=ImageMosaicWall
+Icon=ImageMosaicWall
+Categories=Office
