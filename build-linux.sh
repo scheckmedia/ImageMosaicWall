@@ -10,7 +10,7 @@ echo "[Desktop Entry]\n
   Icon=ImageMosaicWall\n
   Categories=Office;\n" >> ${TRAVIS_BUILD_DIR-build}/usr/share/applications/ImageMosaicWall.desktop
 
-cp ${TRAVIS_BUILD_DIR-build}/assets/imw-logo.png ${TRAVIS_BUILD_DIR-build}/usr/share/icons/hicolor/256x256/ImageMosaicWall.png
+cp ${TRAVIS_BUILD_DIR}/assets/imw-logo.png ${TRAVIS_BUILD_DIR-build}/usr/share/icons/hicolor/256x256/ImageMosaicWall.png
 cp ${TRAVIS_BUILD_DIR-build}/ImageMosaicWall ${TRAVIS_BUILD_DIR-build}/usr/bin/
 ${TRAVIS_BUILD_DIR-build}/linuxdeployqt-continuous-x86_64.AppImage ${TRAVIS_BUILD_DIR-build}/usr/share/applications/*.desktop -bundle-non-qt-libs
 ${TRAVIS_BUILD_DIR-build}/linuxdeployqt-continuous-x86_64.AppImage ${TRAVIS_BUILD_DIR-build}/usr/share/applications/*.desktop -appimage
