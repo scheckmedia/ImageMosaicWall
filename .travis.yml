@@ -13,7 +13,7 @@ matrix:
   allow_failures:
   - os: osx
     compiler: gcc
-    env: CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty
+    env: CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty builddir=
 before_install:
 - '[[ "$TRAVIS_OS_NAME" != linux || -z "$PPA" ]] || sudo add-apt-repository -y ppa:$PPA'
 - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
@@ -39,10 +39,10 @@ before_script:
 - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
 script:
 - make -C "$TRAVIS_BUILD_DIR-build" all
-- ls "$TRAVIS_BUILD_DIR-build"
 before_deploy:
-- if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd "$TRAVIS_BUILD_DIR-build" && tar -zcvf "ImageMosaicWall_$TRAVIS_OS_NAME_$CXX.tar.gz" ImageMosaicWall; fi;
-- if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd "$TRAVIS_BUILD_DIR-build" && tar -zcvf "ImageMosaicWall_$TRAVIS_OS_NAME_$CXX.tar.gz" ImageMosaicWall.app; fi;
+- '[ "$TRAVIS_OS_NAME" != linux ] || chmod +x build-linux.sh && ./build-linux.sh'
+- if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd "$TRAVIS_BUILD_DIR-build" &&  tar -zcvf "ImageMosaicWall_linux_$CXX.tar.gz" ImageMosaicWall*.AppImage*; fi;
+- if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd "$TRAVIS_BUILD_DIR-build" && macdeployqt ImageMosaicWall.app && tar -zcvf "ImageMosaicWall_osx.tar.gz" ImageMosaicWall.app; fi;
 deploy:
   provider: releases
   api_key:
