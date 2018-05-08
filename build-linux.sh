@@ -4,5 +4,6 @@ chmod a+x ${builddir}/linuxdeployqt-*.AppImage
 cp assets/ImageMosaicWall.desktop ${builddir}/usr/share/applications/
 cp assets/imw-logo.png ${builddir}/usr/share/icons/hicolor/256x256/ImageMosaicWall.png
 cp ${builddir}/ImageMosaicWall ${builddir}/usr/bin/
-${builddir}/linuxdeployqt-continuous-x86_64.AppImage ${builddir}/usr/share/applications/*.desktop -bundle-non-qt-libs
-${builddir}/linuxdeployqt-continuous-x86_64.AppImage ${builddir}/usr/share/applications/*.desktop -appimage
+cd ${builddir}
+./linuxdeployqt-continuous-x86_64.AppImage usr/share/applications/*.desktop -bundle-non-qt-libs
+./linuxdeployqt-continuous-x86_64.AppImage usr/share/applications/*.desktop -appimage
