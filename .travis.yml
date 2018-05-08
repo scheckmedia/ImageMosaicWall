@@ -33,10 +33,9 @@ before_script:
 - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
 script:
 - make -C "$TRAVIS_BUILD_DIR-build" all
-- 'if [ "$TRAVIS_OS_NAME" == linux ]; then chmod +x build-linux.sh && ./build-linux.sh; fi;'
-- ls -al "$TRAVIS_BUILD_DIR-build"
 before_deploy:
-- if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd "$TRAVIS_BUILD_DIR-build" &&  tar -zcvf "ImageMosaicWall_linux_$CXX.tar.gz" ImageMosaicWall*.AppImage*; fi;
+- 'if [ "$TRAVIS_OS_NAME" == linux ]; then chmod +x build-linux.sh && ./build-linux.sh; fi;'
+- if [[ "$TRAVIS_OS_NAME" == linux ]]; then cd "$TRAVIS_BUILD_DIR-build" &&  tar -zcvf "ImageMosaicWall_linux.tar.gz" Image_Mosaic_Wall*.AppImage; fi;
 - if [[ "$TRAVIS_OS_NAME" == osx ]]; then cd "$TRAVIS_BUILD_DIR-build" && macdeployqt ImageMosaicWall.app && tar -zcvf "ImageMosaicWall_osx.tar.gz" ImageMosaicWall.app; fi;
 deploy:
   provider: releases
