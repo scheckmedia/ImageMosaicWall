@@ -1,7 +1,6 @@
 mkdir -p ${TRAVIS_BUILD_DIR-build}/usr/share/icons/hicolor/256x256 ${TRAVIS_BUILD_DIR-build}/usr/share/applications ${TRAVIS_BUILD_DIR-build}/usr/lib ${TRAVIS_BUILD_DIR-build}/usr/bin
 wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -P ${TRAVIS_BUILD_DIR-build}
 chmod a+x ${TRAVIS_BUILD_DIR-build}/linuxdeployqt-*.AppImage
-${TRAVIS_BUILD_DIR-build}/linuxdeployqt-*.AppImage --appimage-extract
 echo "[Desktop Entry]\n
   Type=Application\n
   Name=Image Mosaic Wall\n
