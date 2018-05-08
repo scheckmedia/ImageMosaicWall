@@ -8,7 +8,7 @@ os:
 dist: trusty
 env:
   matrix:
-  - CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty builddir=${TRAVIS_BUILD_DIR}
+  - CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty builddir=${TRAVIS_BUILD_DIR-build}
 matrix:
   allow_failures:
   - os: osx
