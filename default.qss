@@ -16,6 +16,21 @@ QMainWindow {
   color: #989899;
 }
 
+#btnLockRatio {
+  background-color: #333333;
+  border: 1px solid #515151;
+}
+
+#btnLockRatio:hover {
+  background-color: #515151;
+  border: 1px solid #A3BED2;
+}
+
+#btnLockRatio:checked {
+  background-color: #A3BED2;
+  border: 1px solid #A3BED2;
+}
+
 #wControls {
   background-color: #bb333333;
 }
