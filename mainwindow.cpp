@@ -32,6 +32,32 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&m_imageProcessing, &ImageProcessing::mosaicGenerated, &m_imageView, &ImageViewer::setLoadingMosaicAt);    
     connect(&m_imageView, &ImageViewer::folderDropped, this, &MainWindow::onFolderDropped);
     connect(&m_imageView, &ImageViewer::imageDropped, this, &MainWindow::onImageDropped);
+    connect(ui->btnLockRatio, &QPushButton::clicked,  [=](){
+        m_lockedResolution.setWidth(ui->sbWidth->value());
+        m_lockedResolution.setHeight(ui->sbHeight->value());
+
+        if(ui->btnLockRatio->isChecked())
+            ui->btnLockRatio->setIcon(QIcon(":/icons/assets/locked.png"));
+        else
+            ui->btnLockRatio->setIcon(QIcon(":/icons/assets/opened.png"));
+
+    });
+    connect(ui->sbWidth, QOverload<int>::of(&QSpinBox::valueChanged),[=](){
+        if(ui->btnLockRatio->isChecked())
+        {
+            ui->sbHeight->blockSignals(true);
+            scaleLockedImageSize(true);
+            ui->sbHeight->blockSignals(false);
+        }
+    });
+    connect(ui->sbHeight, QOverload<int>::of(&QSpinBox::valueChanged),[=](){
+        if(ui->btnLockRatio->isChecked())
+        {
+            ui->sbWidth->blockSignals(true);
+            scaleLockedImageSize(false);
+            ui->sbWidth->blockSignals(false);
+        }
+    });
 }
 
 MainWindow::~MainWindow()
@@ -80,6 +106,9 @@ void MainWindow::loadImage(QString &filename)
 
     if(m_baseImage.isNull())
         return;
+
+    if(ui->btnLockRatio->isChecked())
+        m_lockedResolution = m_baseImage.size();
 
     setLoadingState(*ui->btnLoad, true);
     updateStatus();
@@ -149,6 +178,29 @@ void MainWindow::setLoadingState(QPushButton &btn, bool isLoading)
         btn.setIcon(m_activeLoadingButtons.value(btn.objectName()));
         m_loadingSequence.stop();
     }
+}
+
+void MainWindow::scaleLockedImageSize(bool senderIsWidth)
+{
+    double n = qMax(m_lockedResolution.width(), m_lockedResolution.height());
+    double d = qMin(m_lockedResolution.width(), m_lockedResolution.height());
+    double ratio = n / d;
+
+    if (ui->sbWidth->value() >= ui->sbHeight->value())
+    {
+        if(senderIsWidth)
+            ui->sbHeight->setValue(ui->sbWidth->value() / ratio);
+        else
+            ui->sbWidth->setValue(ui->sbHeight->value() * ratio);
+    }
+    else
+    {
+        if(senderIsWidth)
+            ui->sbHeight->setValue(ui->sbWidth->value() * ratio);
+        else
+            ui->sbWidth->setValue(ui->sbHeight->value() / ratio);
+    }
+
 }
 
 

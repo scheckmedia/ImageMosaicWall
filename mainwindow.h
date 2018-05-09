@@ -30,6 +30,7 @@ private:
     void loadImage(QString&);
     void loadImageFolder(QString&);
     void setLoadingState(QPushButton &btn, bool isLoading);
+    void scaleLockedImageSize(bool senderIsWidth);
 
 signals:
     void mosaicCalculationFinished(QMap<GridPoint, QImage>&);
@@ -57,6 +58,7 @@ private:
     QThread *m_mosaicGeneration;    
     QMap<QString, QIcon> m_activeLoadingButtons;
     QMovie m_loadingSequence;
+    QSize m_lockedResolution;
 };
 
 #endif // MAINWINDOW_H
