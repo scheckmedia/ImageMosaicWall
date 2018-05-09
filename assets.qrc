@@ -4,7 +4,6 @@
         <file>assets/base_image.png</file>
         <file>assets/images_folder.png</file>
         <file>assets/download.png</file>
-        <file>assets/generate.png</file>
         <file>assets/down.png</file>
         <file>assets/up.png</file>
         <file>assets/info.png</file>
@@ -12,8 +11,15 @@
         <file>assets/home.png</file>
         <file>assets/zoom_in.png</file>
         <file>assets/zoom_out.png</file>
+        <file>assets/lock_resize.png</file>
+        <file>assets/opened.png</file>
+        <file>assets/locked.png</file>
+        <file>assets/generate.png</file>
     </qresource>
     <qresource prefix="/styles">
         <file>default.qss</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file>assets/MaterialIcons-Regular.ttf</file>
     </qresource>
 </RCC>
