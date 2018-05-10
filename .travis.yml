@@ -37,7 +37,8 @@ before_deploy:
       export DEPLOYFILE="ImageMosaicWall*.AppImage";
     fi;
   - if [ "$TRAVIS_OS_NAME" == osx ]; then
-      cd "$TRAVIS_BUILD_DIR-build" && macdeployqt ImageMosaicWall.app;
+      cd "$TRAVIS_BUILD_DIR-build";
+      macdeployqt ImageMosaicWall.app;
       export DEPLOYFILE="ImageMosaicWall.app";
     fi;
   - ls -al && echo ${DEPLOYFILE}
