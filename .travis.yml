@@ -32,7 +32,7 @@ script:
   - make -C "$TRAVIS_BUILD_DIR-build" all
 before_deploy:
   - if [ "$TRAVIS_OS_NAME" == linux ]; then chmod +x build-linux.sh && ./build-linux.sh && export DEPLOYFILE="ImageMosaicWall*.AppImage"; fi;
-  - if [ "$TRAVIS_OS_NAME" == osx ]; then cd "$TRAVIS_BUILD_DIR-build" && macdeployqt ImageMosaicWall.app &&&& export DEPLOYFILE="ImageMosaicWall*.AppImage"; fi;
+  - if [ "$TRAVIS_OS_NAME" == osx ]; then cd "$TRAVIS_BUILD_DIR-build" && macdeployqt ImageMosaicWall.app && export DEPLOYFILE="ImageMosaicWall.app"; fi;
 deploy:
   provider: releases
   api_key:
