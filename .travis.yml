@@ -33,6 +33,7 @@ script:
 before_deploy:
   - if [ "$TRAVIS_OS_NAME" == linux ]; then
       chmod +x build-linux.sh && ./build-linux.sh;
+      cd "$TRAVIS_BUILD_DIR-build";
       export DEPLOYFILE="ImageMosaicWall*.AppImage";
     fi;
   - if [ "$TRAVIS_OS_NAME" == osx ]; then
