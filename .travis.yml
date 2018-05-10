@@ -34,12 +34,12 @@ before_deploy:
   - if [[  "$TRAVIS_OS_NAME" == linux ]]; then
       chmod +x build-linux.sh && ./build-linux.sh;
       cd "$TRAVIS_BUILD_DIR-build";
-      mkdir bin && cp ImageMosaicWall*.AppImage bin/
+      mkdir bin && cp ImageMosaicWall*.AppImage bin/ ;
     fi
   - if [[  "$TRAVIS_OS_NAME" == osx ]]; then
       cd "$TRAVIS_BUILD_DIR-build";
       macdeployqt ImageMosaicWall.app;
-      mkdir bin && cp ImageMosaicWall.app bin/
+      mkdir bin && cp ImageMosaicWall.app bin/ ;
     fi
   - ls -al bin/
 deploy:
