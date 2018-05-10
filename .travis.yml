@@ -38,8 +38,8 @@ before_deploy:
     fi
   - if [[  "$TRAVIS_OS_NAME" == osx ]]; then
       cd "$TRAVIS_BUILD_DIR-build";
-      macdeployqt ImageMosaicWall.app;
-      mkdir bin && cp ImageMosaicWall.app bin/ ;
+      macdeployqt -dmg ImageMosaicWall.app;
+      mkdir bin && cp ImageMosaicWall*.dmg bin/ ;
     fi
   - ls -al bin/
 deploy:
