@@ -23,17 +23,17 @@ install:
 - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt$BREW'
 - qmake -v
 before_script:
-- '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
-- '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
-- '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
-- mkdir -p "$TRAVIS_BUILD_DIR-build"
-- qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
+  - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
+  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
+  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
+  - mkdir -p "$TRAVIS_BUILD_DIR-build"
+  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
 script:
-- make -C "$TRAVIS_BUILD_DIR-build" all
+  - make -C "$TRAVIS_BUILD_DIR-build" all
 before_deploy:
-- 'if [ "$TRAVIS_OS_NAME" == linux ]; then chmod +x build-linux.sh && ./build-linux.sh; fi;'
-- cd "$TRAVIS_BUILD_DIR-build"
-- 'if [ "$TRAVIS_OS_NAME" == osx ]; then macdeployqt ImageMosaicWall.app; fi';
+  - 'if [ "$TRAVIS_OS_NAME" == linux ]; then chmod +x build-linux.sh && ./build-linux.sh; fi;'
+  - cd "$TRAVIS_BUILD_DIR-build"
+  - 'if [ "$TRAVIS_OS_NAME" == osx ]; then macdeployqt ImageMosaicWall.app; fi;'
 deploy:
   provider: releases
   api_key:
