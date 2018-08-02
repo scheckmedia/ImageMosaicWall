@@ -21,5 +21,8 @@
     </qresource>
     <qresource prefix="/fonts">
         <file>assets/MaterialIcons-Regular.ttf</file>
+        <file>assets/SourceSansPro-Bold.ttf</file>
+        <file>assets/SourceSansPro-Light.ttf</file>
+        <file>assets/SourceSansPro-Regular.ttf</file>
     </qresource>
 </RCC>
