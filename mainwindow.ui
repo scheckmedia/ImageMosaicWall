@@ -86,7 +86,7 @@
             <number>12</number>
            </property>
            <item alignment="Qt::AlignHCenter">
-            <widget class="QPushButton" name="btnLoad">
+            <widget class="ProgressButton" name="btnLoad">
              <property name="minimumSize">
               <size>
                <width>200</width>
@@ -118,7 +118,7 @@
             </widget>
            </item>
            <item alignment="Qt::AlignHCenter">
-            <widget class="QPushButton" name="btnSetImageFolder">
+            <widget class="ProgressButton" name="btnSetImageFolder">
              <property name="minimumSize">
               <size>
                <width>200</width>
@@ -186,7 +186,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Settings</string>
+              <string>Variation</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -194,33 +194,48 @@
             </widget>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
-             <property name="leftMargin">
-              <number>40</number>
+            <layout class="QGridLayout" name="gridLayout_3">
+             <property name="spacing">
+              <number>10</number>
              </property>
-             <property name="rightMargin">
-              <number>40</number>
-             </property>
-             <item alignment="Qt::AlignLeft">
-              <widget class="QLabel" name="label_9">
-               <property name="text">
-                <string>Unique Cells</string>
+             <item row="0" column="0" colspan="2">
+              <widget class="QSlider" name="slHistory">
+               <property name="minimum">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <number>5</number>
+               </property>
+               <property name="singleStep">
+                <number>1</number>
+               </property>
+               <property name="pageStep">
+                <number>1</number>
+               </property>
+               <property name="sliderPosition">
+                <number>0</number>
+               </property>
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="invertedControls">
+                <bool>false</bool>
+               </property>
+               <property name="tickPosition">
+                <enum>QSlider::TicksAbove</enum>
+               </property>
+               <property name="tickInterval">
+                <number>1</number>
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QSpinBox" name="sbHistory">
-               <property name="frame">
-                <bool>false</bool>
+             <item row="1" column="0" colspan="2">
+              <widget class="QLabel" name="lblVariation">
+               <property name="text">
+                <string>disabled</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
-               </property>
-               <property name="buttonSymbols">
-                <enum>QAbstractSpinBox::UpDownArrows</enum>
-               </property>
-               <property name="maximum">
-                <number>20</number>
                </property>
               </widget>
              </item>
@@ -287,11 +302,23 @@
              </item>
              <item row="1" column="0">
               <widget class="QSpinBox" name="sbWidth">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="wrapping">
                 <bool>false</bool>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
+               </property>
+               <property name="suffix">
+                <string/>
+               </property>
+               <property name="prefix">
+                <string/>
                </property>
                <property name="minimum">
                 <number>1</number>
@@ -334,8 +361,17 @@
              </item>
              <item row="1" column="2">
               <widget class="QSpinBox" name="sbHeight">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
+               </property>
+               <property name="suffix">
+                <string/>
                </property>
                <property name="maximum">
                 <number>16512</number>
@@ -358,7 +394,7 @@
                </property>
                <property name="icon">
                 <iconset resource="assets.qrc">
-                 <normaloff>:/icons/assets/opened.png</normaloff>:/icons/assets/opened.png</iconset>
+                 <normaloff>:/icons/assets/locked.png</normaloff>:/icons/assets/locked.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -370,7 +406,7 @@
                 <bool>true</bool>
                </property>
                <property name="checked">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="default">
                 <bool>false</bool>
@@ -651,6 +687,13 @@
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>ProgressButton</class>
+   <extends>QPushButton</extends>
+   <header>progressbutton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="assets.qrc"/>
  </resources>

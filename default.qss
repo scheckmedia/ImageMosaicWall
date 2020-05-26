@@ -10,10 +10,12 @@
 
 QMainWindow {
   background-color: #333333;
+  font-family: 'Source Sans Pro';
 }
 
 .MainWindow QLabel {
   color: #989899;
+  font-family: 'Source Sans Pro';
 }
 
 #btnLockRatio {
@@ -49,26 +51,34 @@ QMainWindow {
   border-radius: 0px;
 }
 
-QPushButton {
-  border: 2px solid #333;
-  padding: 5 px;
-  background: #AD3600;
+
+QPushButton, ProgressButton {
+  font-family: 'Source Sans Pro';
+  border: none;
+  min-height: 48px;
+  background: #A3BED2;
   background-position: left;
 }
 
-QPushButton:disabled {
-  background: #50AD3600;
+ProgressButton {
+  qproperty-progressColor: #80333333;
+  qproperty-progressLineWidth: 4;
 }
 
-QPushButton:hover {
+QPushButton:disabled, ProgressButton:disabled {
+  background: #50A3BED2;
+}
+
+QPushButton:hover, ProgressButton:hover {
   background-color: #515151;
 }
 
-QPushButton:pressed {
+QPushButton:pressed, ProgressButton:pressed {
   background-color: #989899;
 }
 
 QSpinBox {
+  font-family: 'Source Sans Pro';
   background-color: #515151;
   border: none;
   color: #989899;
@@ -101,3 +111,18 @@ QSpinBox::up-arrow {
 QSpinBox::down-arrow {
   image: url(:/icons/assets/down.png);
 }
+
+
+QSlider::groove:horizontal {
+  background: #515151;
+  height: 2px;
+  margin-top: 12px;
+}
+
+QSlider::handle:horizontal {
+    background: #A3BED2;
+    border: none;
+    width: 10px;
+    margin: -6px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+}
+

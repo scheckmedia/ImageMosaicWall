@@ -54,6 +54,8 @@ public:
 
 signals:
     void mosaicGenerated(const GridPoint);
+    void cellProcessed(const int cellIndex);
+    void imageProcessed(const QString image);
 
 private:
    void calculateGridCellsMean(const QImage&, const QSize&, const QSize&, std::vector<QColor>&, int, int);

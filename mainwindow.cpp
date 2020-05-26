@@ -29,9 +29,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->sbRows, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
     connect(ui->sbCols, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
     connect(ui->btnSetResolution, SIGNAL(clicked(bool)), this, SLOT(onOutputResolutionChanged()));
-    connect(&m_imageProcessing, &ImageProcessing::mosaicGenerated, &m_imageView, &ImageViewer::setLoadingMosaicAt);    
+
+    connect(&m_imageProcessing, &ImageProcessing::mosaicGenerated, &m_imageView, &ImageViewer::setLoadingMosaicAt);
+    connect(&m_imageProcessing, &ImageProcessing::imageProcessed, ui->btnSetImageFolder, &ProgressButton::increment);
+    connect(&m_imageProcessing, &ImageProcessing::cellProcessed, ui->btnLoad, &ProgressButton::increment);
+
     connect(&m_imageView, &ImageViewer::folderDropped, this, &MainWindow::onFolderDropped);
-    connect(&m_imageView, &ImageViewer::imageDropped, this, &MainWindow::onImageDropped);
+    connect(&m_imageView, &ImageViewer::imageDropped, this, &MainWindow::onImageDropped);    
     connect(ui->btnLockRatio, &QPushButton::clicked,  [=](){
         m_lockedResolution.setWidth(ui->sbWidth->value());
         m_lockedResolution.setHeight(ui->sbHeight->value());
@@ -57,6 +61,34 @@ MainWindow::MainWindow(QWidget *parent)
             scaleLockedImageSize(false);
             ui->sbWidth->blockSignals(false);
         }
+    });
+
+    connect(ui->slHistory, QOverload<int>::of(&QSlider::valueChanged), [=]() {
+        QString val;
+        switch (ui->slHistory->value()) {
+        case 0:
+            val = tr("disabled");
+            break;
+        case 1:
+            val = tr("very low");
+            break;
+        case 2:
+            val = tr("low");
+            break;
+        case 3:
+            val = tr("medium");
+            break;
+        case 4:
+            val = tr("high");
+            break;
+        case 5:
+            val = tr("very high");
+            break;
+        default:
+            break;
+        }
+
+        ui->lblVariation->setText(val);
     });
 }
 
@@ -88,13 +120,13 @@ void MainWindow::enableEnableUi(bool enabled)
     ui->btnLoad->setEnabled(enabled);
     ui->btnSave->setEnabled(enabled);
     ui->btnSetResolution->setEnabled(enabled);
-    ui->btnSetImageFolder->setEnabled(enabled);
+    ui->btnSetImageFolder->setEnabled(enabled);    
 
     ui->sbCols->setEnabled(enabled);
     ui->sbRows->setEnabled(enabled);
     ui->sbHeight->setEnabled(enabled);
     ui->sbWidth->setEnabled(enabled);
-    ui->sbHistory->setEnabled(enabled);
+    ui->slHistory->setEnabled(enabled);
 }
 
 void MainWindow::loadImage(QString &filename)
@@ -110,7 +142,6 @@ void MainWindow::loadImage(QString &filename)
     if(ui->btnLockRatio->isChecked())
         m_lockedResolution = m_baseImage.size();
 
-    setLoadingState(*ui->btnLoad, true);
     updateStatus();
 
     ui->sbWidth->setValue(m_baseImage.width());
@@ -118,6 +149,7 @@ void MainWindow::loadImage(QString &filename)
 
     QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
 
+    ui->btnLoad->setRange(0, gridSize.width() * gridSize.height());
     m_imageView.setImage(m_baseImage);
     m_imageView.setGrid(gridSize);
 
@@ -128,7 +160,6 @@ void MainWindow::loadImage(QString &filename)
 
     connect(watcher, &QFutureWatcher<void>::finished, [=]() {
        ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
-       setLoadingState(*ui->btnLoad, false);
        watcher->deleteLater();
     });
     watcher->setFuture(f);
@@ -136,7 +167,9 @@ void MainWindow::loadImage(QString &filename)
 
 void MainWindow::loadImageFolder(QString &path)
 {
-    setLoadingState(*ui->btnSetImageFolder, true);
+    if(path.isEmpty())
+        return;
+
     QStringList filter = QStringList() << "*.png" << "*.jpg" << "*.jpeg" << "*.bmp";
     QDirIterator iterator(path, filter, QDir::Files, QDirIterator::Subdirectories);
 
@@ -147,6 +180,8 @@ void MainWindow::loadImageFolder(QString &path)
         imageList.append(iterator.filePath());
     }
 
+    ui->btnSetImageFolder->setRange(0, imageList.size());
+
     QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
     QFuture<void> f = QtConcurrent::run([=]() {
         m_imageProcessing.processMosaicImages(imageList);
@@ -155,29 +190,10 @@ void MainWindow::loadImageFolder(QString &path)
 
     connect(watcher, &QFutureWatcher<void>::finished, [=]() {
        updateStatus();
-       setLoadingState(*ui->btnSetImageFolder, false);
        watcher->deleteLater();
     });
     watcher->setFuture(f);
 
-}
-
-void MainWindow::setLoadingState(QPushButton &btn, bool isLoading)
-{
-    if(isLoading)
-    {
-        m_loadingSequence.start();
-        m_activeLoadingButtons.insert(btn.objectName(), btn.icon());
-        connect(&m_loadingSequence, &QMovie::frameChanged, [&](int){
-            btn.setIcon(m_loadingSequence.currentPixmap());
-        });
-    }
-    else {
-        //disconnect
-        disconnect(&m_loadingSequence, &QMovie::frameChanged, 0, 0);
-        btn.setIcon(m_activeLoadingButtons.value(btn.objectName()));
-        m_loadingSequence.stop();
-    }
 }
 
 void MainWindow::scaleLockedImageSize(bool senderIsWidth)
@@ -265,7 +281,7 @@ void MainWindow::on_btnGenerate_clicked()
         QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
 
         m_imageProcessing.moveToThread(this->thread());
-        bool success = m_imageProcessing.generateImage(m_baseImage.size(), gridSize, ui->sbHistory->value());
+        bool success = m_imageProcessing.generateImage(m_baseImage.size(), gridSize, m_variations[ui->slHistory->value()]);
 
         if(!success)
             return;

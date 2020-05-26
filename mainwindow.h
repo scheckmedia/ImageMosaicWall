@@ -28,8 +28,7 @@ private:
     void updateStatus();
     void enableEnableUi(bool enabled);
     void loadImage(QString&);
-    void loadImageFolder(QString&);
-    void setLoadingState(QPushButton &btn, bool isLoading);
+    void loadImageFolder(QString&);    
     void scaleLockedImageSize(bool senderIsWidth);
 
 signals:
@@ -59,6 +58,8 @@ private:
     QMap<QString, QIcon> m_activeLoadingButtons;
     QMovie m_loadingSequence;
     QSize m_lockedResolution;
+
+    const ushort m_variations[6] = {0, 3, 9, 11, 15, 19};
 };
 
 #endif // MAINWINDOW_H

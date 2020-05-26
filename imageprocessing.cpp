@@ -94,6 +94,7 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage, const QSiz
         blue /= numberOfPixel;
 
         colorMap.at(g) = QColor(red, green, blue);
+        emit cellProcessed(g);
     }
 }
 
@@ -129,6 +130,7 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList)
 
         QMutexLocker lock(&mutex);
         m_imageMeanMap.insert(imageFileName, QColor(meanR, meanG, meanB));
+        emit imageProcessed(imageFileName);
     };
 
 
@@ -139,7 +141,7 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize, const QSize
 {
     QVector<QString> history;
     int g = pos;
-
+    m_gridMapCache.clear();
 
     for(; g < pos + length; ++g)
     {

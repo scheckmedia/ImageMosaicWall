@@ -29,13 +29,15 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     imageviewer.cpp \
-    imageprocessing.cpp
+    imageprocessing.cpp \
+    progressbutton.cpp
 
 
 HEADERS += \
         mainwindow.h \
     imageviewer.h \
-    imageprocessing.h
+    imageprocessing.h \
+    progressbutton.h
 
 
 FORMS += \
