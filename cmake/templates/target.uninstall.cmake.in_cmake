@@ -1,0 +1,39 @@
+#
+# Copyright (c) 2019-2020, Gilles Caulier, <caulier dot gilles at gmail dot com>
+#
+# Redistribution and use is allowed according to the terms of the BSD license.
+# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/install_manifest.txt")
+
+    message(FATAL_ERROR "Cannot find install manifest: \"${CMAKE_BINARY_DIR}/install_manifest.txt\"")
+
+endif()
+
+file(READ "${CMAKE_BINARY_DIR}/install_manifest.txt" files)
+string(REGEX REPLACE "\n" ";" files "${files}")
+
+foreach(file ${files})
+
+    message(STATUS "Uninstalling \"${file}\"")
+
+    if(EXISTS "${file}")
+
+        exec_program("${CMAKE_COMMAND}" ARGS "-E remove \"${file}\""
+                     OUTPUT_VARIABLE rm_out
+                     RETURN_VALUE rm_retval
+        )
+
+        if(NOT "${rm_retval}" STREQUAL 0)
+
+            message(FATAL_ERROR "Problem when removing \"${file}\"")
+
+        endif()
+
+    else()
+
+        message(STATUS "File \"${file}\" does not exist.")
+
+    endif()
+
+endforeach()
