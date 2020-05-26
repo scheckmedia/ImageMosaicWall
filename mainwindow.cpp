@@ -107,6 +107,8 @@ void MainWindow::loadImage(QString &filename)
     if(m_baseImage.isNull())
         return;
 
+    m_baseImagePath = filename;
+
     if(ui->btnLockRatio->isChecked())
         m_lockedResolution = m_baseImage.size();
 
@@ -208,7 +210,9 @@ void MainWindow::scaleLockedImageSize(bool senderIsWidth)
 
 void MainWindow::on_btnLoad_clicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Open Image"),  QDir::homePath(), tr("ImageFiles (*.png *.jpg *bmp)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Open Image"),
+                                                    m_currentFolder.isEmpty() ? QDir::homePath() : m_currentFolder,
+                                                    tr("ImageFiles (*.png *.jpg *bmp)"));
     loadImage(filename);
 }
 
@@ -281,13 +285,19 @@ void MainWindow::on_btnSave_clicked()
 {
     QString defaultFileExtension = "PNG (*.png)";
     QString filename = QFileDialog::getSaveFileName(this, "Save Mosaic Image",
-                                 QDir::homePath(),
+                                 m_baseImagePath.isEmpty() ? QDir::homePath() : m_baseImagePath,
                                  tr("JPEG (*.jpg);;PNG (*.png)"), &defaultFileExtension);
     m_imageProcessing.getOutputImage().save(filename);
 }
 
 void MainWindow::on_btnSetImageFolder_clicked()
 {
-    QString path = QFileDialog::getExistingDirectory(this, tr("Load Images Folder"), QDir::homePath());
+    QString path = QFileDialog::getExistingDirectory(this, tr("Load Images Folder"),
+                                                     m_currentFolder.isEmpty() ? QDir::homePath() : m_currentFolder);
     loadImageFolder(path);
+}
+
+void MainWindow::setCurrentFolder(const QString& folder)
+{
+    m_currentFolder = folder;
 }

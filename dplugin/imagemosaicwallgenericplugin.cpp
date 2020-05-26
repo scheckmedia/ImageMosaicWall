@@ -111,24 +111,21 @@ void ImageMosaicWallPlugin::slotImageMosaicWall()
 {
     DInfoInterface* const iface = infoIface(sender());
     QList<QUrl> images          = iface->currentSelectedItems();
-    QString caption             = QString::fromUtf8("List of current selected items (%1):").arg(images.count());
 
     if (images.isEmpty())
     {
         images  = iface->currentAlbumItems();
-        caption = QString::fromUtf8("List of all items (%1):").arg(images.count());
     }
 
     if (!images.isEmpty())
     {
-        QStringList items;
-
-        foreach (const QUrl& url, images)
-        {
-            items << url.url();
-        }
-
+        QString topImage   = images.first().toLocalFile();
+        qDebug() << "Using Top Image:" << topImage;
+        QString currFolder = images.first().adjusted(QUrl::RemoveFilename).toLocalFile();
+        qDebug() << "Using Current Folder:" << currFolder;
         MainWindow* const dlg = new MainWindow();
+        dlg->setCurrentFolder(currFolder);
+        dlg->onImageDropped(topImage);
         dlg->show();
     }
 }
