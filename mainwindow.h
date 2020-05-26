@@ -24,6 +24,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void setCurrentFolder(const QString& folder);
+
 private:
     void updateStatus();
     void enableEnableUi(bool enabled);
@@ -59,6 +61,8 @@ private:
     QMap<QString, QIcon> m_activeLoadingButtons;
     QMovie m_loadingSequence;
     QSize m_lockedResolution;
+    QString m_currentFolder;
+    QString m_baseImagePath;
 };
 
 #endif // MAINWINDOW_H
