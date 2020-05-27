@@ -4,39 +4,55 @@ compiler:
 os:
 - linux
 - osx
-dist: trusty
+dist: bionic
 env:
   matrix:
-  - CONFIG=RELEASE QT=510 BREW=@5.10 PPA=beineri/opt-qt-5.10.1-trusty builddir="$TRAVIS_BUILD_DIR-build"
+  - CONFIG=RELEASE QT=514 BREW=@5.14 PPA=beineri/opt-qt-5.14.0-bionic builddir="$TRAVIS_BUILD_DIR-build"
 before_install:
-- '[[ "$TRAVIS_OS_NAME" != linux || -z "$PPA" ]] || sudo add-apt-repository -y ppa:$PPA'
-- '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
-- '[ "$TRAVIS_OS_NAME" != osx   ] || brew update'
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    sudo add-apt-repository -y ppa:$PPA;
+    sudo apt-get -qy update;
+  fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    brew update;
+  fi
 install:
-- '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install doxygen graphviz lcov libexiv2-dev'
-- '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install
-  qt${QT}base qt${QT}xmlpatterns'
-- '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install
-  qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev'
-- '[ "$TRAVIS_OS_NAME" != linux ] || gem install lcoveralls'
-- '[ "$TRAVIS_OS_NAME" != osx ] || brew install doxygen graphviz exiv2 qt$BREW'
-- '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt$BREW'
-- qmake -v
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    sudo apt-get -qy install doxygen graphviz lcov libexiv2-dev libgl1-mesa-dev;
+    if [[ "$PPA" == *"/opt-"* ]]; then
+      sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns;
+    else
+      sudo apt-get -qy install qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev;
+    fi;
+    gem install lcoveralls;
+  fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    brew install doxygen graphviz exiv2 qt;
+    brew link --force qt;
+  fi
+
 before_script:
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
-  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      if [[ "$PPA" == *"/opt-"* ]]; then
+        source /opt/qt$QT/bin/qt$QT-env.sh;
+        export QMAKESPEC=linux-clang;
+      fi;
+    fi
+  # - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+  #     export QMAKESPEC=macx-clang;
+  #   fi
+  - qmake -v
   - mkdir -p "$TRAVIS_BUILD_DIR-build"
-  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR"
+  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR" QMAKE_CFLAGS_ISYSTEM=-I
 script:
   - make -C "$TRAVIS_BUILD_DIR-build" all
 before_deploy:
-  - if [[  "$TRAVIS_OS_NAME" == linux ]]; then
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
       chmod +x build-linux.sh && ./build-linux.sh;
       cd "$TRAVIS_BUILD_DIR-build";
       mkdir bin && cp ImageMosaicWall*.AppImage bin/ ;
     fi
-  - if [[  "$TRAVIS_OS_NAME" == osx ]]; then
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       cd "$TRAVIS_BUILD_DIR-build";
       macdeployqt ImageMosaicWall.app -dmg;
       mkdir bin && cp ImageMosaicWall*.dmg bin/ ;
