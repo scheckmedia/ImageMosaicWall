@@ -6,7 +6,7 @@
 
 ImageProcessing::ImageProcessing(QObject *parent) : QObject(parent) {}
 
-ImageProcessing::~ImageProcessing() {}
+ImageProcessing::~ImageProcessing() { m_importFolderCancled = true; }
 
 void ImageProcessing::processMosaicImages(const QList<QString> &imageList) {
   m_imageMeanMap.clear();
@@ -92,6 +92,9 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
 void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList) {
   QMutex mutex;
   std::function<void(const QString)> scale = [&](const QString imageFileName) {
+    if (m_importFolderCancled)
+      return;
+
     QImage image = extractThumbnail(imageFileName, QSize(128, 128));
     if (image.isNull())
       image = QImage(imageFileName);
@@ -116,6 +119,9 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList) {
     meanB /= (image.width() * image.height());
 
     QMutexLocker lock(&mutex);
+    if (m_importFolderCancled)
+      return;
+
     m_imageMeanMap.insert(imageFileName, QColor(meanR, meanG, meanB));
     emit imageProcessed(imageFileName);
   };
@@ -217,6 +223,10 @@ double ImageProcessing::calculateDistance(ColorLab rhs, ColorLab lhs) const {
 
 QMap<QString, QColor> ImageProcessing::getImageMeanMap() const {
   return m_imageMeanMap;
+}
+
+bool ImageProcessing::getImportFolderCancled() const {
+  return m_importFolderCancled;
 }
 
 const QImage &ImageProcessing::getOutputImage() const {

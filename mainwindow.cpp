@@ -186,7 +186,8 @@ void MainWindow::loadImageFolder(QString &path) {
   QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
   QFuture<void> f = QtConcurrent::run([=]() {
     m_imageProcessing.processMosaicImages(imageList);
-    ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
+    if (!m_imageProcessing.getImportFolderCancled())
+      ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
   });
 
   connect(watcher, &QFutureWatcher<void>::finished, [=]() {
