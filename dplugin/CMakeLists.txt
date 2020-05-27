@@ -4,7 +4,6 @@
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
-cmake_minimum_required(VERSION "3.1.0")
 set(CMAKE_AUTOMOC ON)
 
 include(FeatureSummary)
@@ -67,6 +66,8 @@ target_link_libraries(Generic_ImageMosaicWall_Plugin
                       Qt5::Widgets
                       Qt5::Gui
                       Qt5::Concurrent
+
+                      exiv2lib
 )
 
 MACRO_ADD_PLUGIN_INSTALL_TARGET(Generic_ImageMosaicWall_Plugin generic)
