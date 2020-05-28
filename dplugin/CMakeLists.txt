@@ -44,6 +44,7 @@ include_directories($<TARGET_PROPERTY:Digikam::digikamcore,INTERFACE_INCLUDE_DIR
 set(imagemosaicwall_generic_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.cpp
                                  ${CMAKE_SOURCE_DIR}/imageviewer.cpp
                                  ${CMAKE_SOURCE_DIR}/imageprocessing.cpp
+                                 ${CMAKE_SOURCE_DIR}/progressbutton.cpp
                                  ${CMAKE_CURRENT_SOURCE_DIR}/imagemosaicwallgenericplugin.cpp
 )
 
