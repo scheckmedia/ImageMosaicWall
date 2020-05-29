@@ -10,7 +10,81 @@ cmake_minimum_required(VERSION "3.1.0")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 include(MacroInstall)
+include(FeatureSummary)
 
-add_subdirectory(dplugin)
+set(CMAKE_AUTOMOC ON)
+
+option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
+
+find_package(Qt5 "5.6.0" REQUIRED
+             NO_MODULE COMPONENTS
+             Core
+             Widgets
+             Gui
+             Concurrent
+)
+
+find_package(Threads)
+
+find_package(exiv2 REQUIRED)
+
+set_package_properties("exiv2"     PROPERTIES
+                       DESCRIPTION "Required to build digiKam"
+                       URL         "https://www.exiv2.org"
+                       TYPE        RECOMMENDED
+                       PURPOSE     "Library to manage image metadata"
+)
+
+include_directories($<TARGET_PROPERTY:exiv2lib,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt5::Widgets,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt5::Core,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt5::Gui,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt5::Concurrent,INTERFACE_INCLUDE_DIRECTORIES>
+
+                    ${CMAKE_BINARY_DIR}
+                    ${CMAKE_SOURCE_DIR}
+)
+
+set(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.cpp
+                              ${CMAKE_SOURCE_DIR}/imageviewer.cpp
+                              ${CMAKE_SOURCE_DIR}/imageprocessing.cpp
+                              ${CMAKE_SOURCE_DIR}/progressbutton.cpp
+)
+
+qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
+                                      ${CMAKE_SOURCE_DIR}/imageviewer.ui
+)
+
+qt5_add_resources(imagemosaicwall_core_QRC_SRCS ${CMAKE_SOURCE_DIR}/assets.qrc)
+
+set(libimagemosaicwall_core_SRCS
+    ${imagemosaicwall_core_SRCS}
+    ${imagemosaicwall_core_QRC_SRCS}
+)
+
+add_library(imagemosaicwallcore STATIC ${libimagemosaicwall_core_SRCS})
+
+if(NOT MSVC)
+    target_compile_options(imagemosaicwallcore PRIVATE -fPIC)
+endif()
+
+add_executable(ImageMosaicWall ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+
+target_link_libraries(ImageMosaicWall
+
+                      imagemosaicwallcore
+
+                      Qt5::Core
+                      Qt5::Widgets
+                      Qt5::Gui
+                      Qt5::Concurrent
+
+                      exiv2lib
+                      ${CMAKE_THREAD_LIBS_INIT}
+)
+
+if (ENABLE_DPLUGIN)
+    add_subdirectory(dplugin)
+endif()
 
 MACRO_ADD_UNINSTALL_TARGET()
