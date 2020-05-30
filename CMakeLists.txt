@@ -84,6 +84,8 @@ target_link_libraries(ImageMosaicWall
                       ${CMAKE_THREAD_LIBS_INIT}
 )
 
+install(TARGETS ImageMosaicWall RUNTIME DESTINATION bin)
+
 if (ENABLE_DPLUGIN)
     add_subdirectory(dplugin)
 endif()
