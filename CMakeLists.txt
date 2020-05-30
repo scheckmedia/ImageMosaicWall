@@ -12,6 +12,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_P
 include(MacroInstall)
 include(FeatureSummary)
 
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_AUTOMOC ON)
 
 option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
