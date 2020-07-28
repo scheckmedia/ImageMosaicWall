@@ -1,5 +1,6 @@
 
 #include "mainwindow.h"
+#include "progressbutton.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
 #include <QDir>
@@ -172,7 +173,8 @@ void MainWindow::loadImageFolder(QString &path) {
                                      << "*.jpg"
                                      << "*.jpeg"
                                      << "*.bmp";
-  QDirIterator iterator(path, filter, QDir::Files,
+  QDirIterator iterator(path, filter,
+                        QDir::Files | QDir::Dirs | QDir::NoDot | QDir::NoDotDot,
                         QDirIterator::Subdirectories);
 
   QList<QString> imageList;
