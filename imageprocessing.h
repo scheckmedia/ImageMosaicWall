@@ -76,7 +76,7 @@ private:
   QMutex m_lockMean;
   QSize m_outputSize;
   std::unique_ptr<QImage> m_outputImage;
-  std::atomic<bool> m_importFolderCancled;
+  std::atomic<bool> m_importFolderCanceled;
   int m_historySize;
 };
 
