@@ -9,11 +9,21 @@ project(ImageMosaicWall)
 cmake_minimum_required(VERSION "3.1.0")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
-include(MacroInstall)
+if (ENABLE_DPLUGIN)
+    include(MacroInstall)
+endif()
+
 include(FeatureSummary)
 
 set(CMAKE_CXX_STANDARD 11)
+
+if(CMAKE_VERSION VERSION_LESS "3.7.0")
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif()
+
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
 
@@ -58,10 +68,12 @@ qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
 
 qt5_add_resources(imagemosaicwall_core_QRC_SRCS ${CMAKE_SOURCE_DIR}/assets.qrc)
 
-set(libimagemosaicwall_core_SRCS
+set(libimagemosaicwall_core_SRCS    
     ${imagemosaicwall_core_SRCS}
     ${imagemosaicwall_core_QRC_SRCS}
 )
+
+message("blaa ${libimagemosaicwall_core_SRCS}")
 
 add_library(imagemosaicwallcore STATIC ${libimagemosaicwall_core_SRCS})
 
@@ -88,6 +100,5 @@ install(TARGETS ImageMosaicWall RUNTIME DESTINATION bin)
 
 if (ENABLE_DPLUGIN)
     add_subdirectory(dplugin)
+    MACRO_ADD_UNINSTALL_TARGET()
 endif()
-
-MACRO_ADD_UNINSTALL_TARGET()
