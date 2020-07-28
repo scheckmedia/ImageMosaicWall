@@ -590,7 +590,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Create Mosqiac</string>
+              <string>Create Mosaic</string>
              </property>
              <property name="icon">
               <iconset resource="assets.qrc">
