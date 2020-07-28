@@ -2,11 +2,13 @@
 #include <QDebug>
 #include <QImage>
 #include <QImageReader>
+#include <algorithm>
 #include <exiv2/exiv2.hpp>
 
-ImageProcessing::ImageProcessing(QObject *parent) : QObject(parent) {}
+ImageProcessing::ImageProcessing(QObject *parent)
+    : QObject(parent), m_importFolderCanceled(false) {}
 
-ImageProcessing::~ImageProcessing() { m_importFolderCancled = true; }
+ImageProcessing::~ImageProcessing() { m_importFolderCanceled = true; }
 
 void ImageProcessing::processMosaicImages(const QList<QString> &imageList) {
   m_imageMeanMap.clear();
@@ -92,7 +94,7 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
 void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList) {
   QMutex mutex;
   std::function<void(const QString)> scale = [&](const QString imageFileName) {
-    if (m_importFolderCancled)
+    if (m_importFolderCanceled.load())
       return;
 
     QImage image = extractThumbnail(imageFileName, QSize(128, 128));
@@ -118,10 +120,10 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> &imageList) {
     meanG /= (image.width() * image.height());
     meanB /= (image.width() * image.height());
 
-    QMutexLocker lock(&mutex);
-    if (m_importFolderCancled)
+    if (m_importFolderCanceled.load())
       return;
 
+    QMutexLocker lock(&mutex);
     m_imageMeanMap.insert(imageFileName, QColor(meanR, meanG, meanB));
     emit imageProcessed(imageFileName);
   };
@@ -134,19 +136,23 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize,
                                                const int pos,
                                                const int length) {
   QVector<QString> history;
-  int g = pos;
   m_gridMapCache.clear();
 
-  for (; g < pos + length; ++g) {
+  std::vector<uint32_t> positions;
+  for (uint32_t i = pos; i < pos + length; ++i)
+    positions.push_back(i);
+
+  std::random_shuffle(positions.begin(), positions.end());
+  for (uint32_t pos : positions) {
     history.clear();
     double bestDistance = INT_MAX;
     QString imagePath;
-    QColor cellMean = m_gridColorMap.at(g);
+    QColor cellMean = m_gridColorMap.at(pos);
     ColorLab cellMeanLab = toLab(cellMean);
 
     GridPoint p;
-    p.setX(g % gridSize.width());
-    p.setY(g / gridSize.width());
+    p.setX(pos % gridSize.width());
+    p.setY(pos / gridSize.width());
 
     for (int kx = -m_historySize; kx <= m_historySize; ++kx) {
       for (int ky = -m_historySize; ky <= m_historySize; ++ky) {
@@ -226,7 +232,7 @@ QMap<QString, QColor> ImageProcessing::getImageMeanMap() const {
 }
 
 bool ImageProcessing::getImportFolderCancled() const {
-  return m_importFolderCancled;
+  return m_importFolderCanceled.load();
 }
 
 const QImage &ImageProcessing::getOutputImage() const {
