@@ -1,44 +1,42 @@
 #include "progressbutton.h"
+#include <QCoreApplication>
 #include <QDebug>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QStyle>
 #include <QStyleOption>
-#include <QCoreApplication>
 
 ProgressButton::ProgressButton(QWidget *parent)
-    : QPushButton(parent)    
+    : QPushButton(parent)
     , m_currentValue(0.0)
     , m_minValue(0.0)
-    , m_maxValue(100.0)    
+    , m_maxValue(100.0)
     , m_progressType(PROGRESS_BOTTOM_LEFT_TO_RIGHT)
     , m_progressColor(QColor(255, 0, 0))
 {
     setObjectName("ProgressButton");
 }
 
-ProgressButton::~ProgressButton()
-{}
-
-
+ProgressButton::~ProgressButton() { }
 
 void ProgressButton::paintEvent(QPaintEvent *e)
 {
     QPushButton::paintEvent(e);
     ensurePolished();
-    QPainter p(this);    
+    QPainter p(this);
 
-    double scale = m_currentValue / (double)(m_maxValue - m_minValue);    
+    double scale = m_currentValue / (double)(m_maxValue - m_minValue);
     QRect rect = e->rect();
     QRect r;
 
-    if(scale >= 1)
+    if (scale >= 1)
     {
         p.end();
         return;
     }
 
-    switch (m_progressType) {
+    switch (m_progressType)
+    {
         case PROGRESS_BOTTOM_LEFT_TO_RIGHT:
             r = QRect(0, rect.height() - progressLineWidth(), rect.width() * scale, progressLineWidth());
             break;
@@ -57,7 +55,6 @@ void ProgressButton::paintEvent(QPaintEvent *e)
 
     p.fillRect(r, progressColor());
     p.end();
-
 }
 
 QColor ProgressButton::progressColor() const
@@ -80,6 +77,15 @@ int ProgressButton::progressLineWidth() const
     return m_progressLineWidth;
 }
 
+int ProgressButton::minValue() const
+{
+    return m_minValue;
+}
+int ProgressButton::maxValue() const
+{
+    return m_maxValue;
+}
+
 void ProgressButton::setProgressLineWidth(int progressLineWidth)
 {
     m_progressLineWidth = progressLineWidth;
@@ -100,9 +106,8 @@ void ProgressButton::reset()
 }
 
 void ProgressButton::updateProgress(int val)
-{    
+{
     m_currentValue = val;
-    qDebug() << "min: " << m_minValue << " max: " << m_maxValue << " current: " << m_currentValue;
     update();
 }
 

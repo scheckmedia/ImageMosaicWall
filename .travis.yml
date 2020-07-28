@@ -4,10 +4,11 @@ compiler:
 os:
 - linux
 - osx
-dist: bionic
+dist: xenial
+osx_image: xcode10.3
 env:
   matrix:
-  - CONFIG=RELEASE QT=514 BREW=@5.14 PPA=beineri/opt-qt-5.14.0-bionic builddir="$TRAVIS_BUILD_DIR-build"
+  - CONFIG=RELEASE QT=515 BREW=@5.15 PPA=beineri/opt-qt-5.15.0-xenial BUILD_DIR="$TRAVIS_BUILD_DIR-build"
 before_install:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     sudo add-apt-repository -y ppa:$PPA;
@@ -18,51 +19,54 @@ before_install:
   fi
 install:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    sudo apt-get -qy install doxygen graphviz lcov libexiv2-dev libgl1-mesa-dev;
-    if [[ "$PPA" == *"/opt-"* ]]; then
-      sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns;
-    else
-      sudo apt-get -qy install qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev;
-    fi;
+    sudo apt-get -qy install doxygen graphviz lcov extra-cmake-modules libgl1-mesa-dev;
+    sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns;
     gem install lcoveralls;
+
+    mkdir exiv2 && cd exiv2;
+    git clone https://github.com/Exiv2/exiv2.git . ;
+    git checkout tags/v0.27.2 -b v0.27.2;
+    mkdir build && cd build;
+    cmake .. -DCMAKE_BUILD_TYPE=Release;
+    cmake --build .;
+    sudo make install && sudo ldconfig;
+    cd ../../;
+  fi
+# brew install exiv2 (0.27.3) causes some crashes we use 0.27.2
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    brew install doxygen graphviz qt5 openssh;
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/6a39dfa5a1b2c379f41b2a2f55c8baae75e0d553/Formula/exiv2.rb;
+    brew link --force qt5;
+  fi
+before_script:
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    if [[ "$PPA" == *"/opt-"* ]]; then
+      source /opt/qt$QT/bin/qt$QT-env.sh;
+      export QMAKESPEC=linux-clang;
+    fi;
   fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    brew install doxygen graphviz exiv2 qt;
-    brew link --force qt;
+    export PATH=$PATH:$(brew --prefix qt5)/bin;
+    sudo ln -s $(brew --prefix qt5)/mkspecs /usr/local/mkspecs;
+    sudo ln -s $(brew --prefix qt5)/plugins /usr/local/plugins;
   fi
-
-before_script:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      if [[ "$PPA" == *"/opt-"* ]]; then
-        source /opt/qt$QT/bin/qt$QT-env.sh;
-        export QMAKESPEC=linux-clang;
-      fi;
-    fi
-  # - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-  #     export QMAKESPEC=macx-clang;
-  #   fi
-  - qmake -v
-  - mkdir -p "$TRAVIS_BUILD_DIR-build"
-  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+="$CONFIG" "$TRAVIS_BUILD_DIR" QMAKE_CFLAGS_ISYSTEM=-I
 script:
-  - make -C "$TRAVIS_BUILD_DIR-build" all
+- cd $TRAVIS_BUILD_DIR
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    chmod +x build-linux.sh;
+    ./build-linux.sh;
+  fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    chmod +x build-osx.sh;
+    ./build-osx.sh;
+  fi
 before_deploy:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      chmod +x build-linux.sh && ./build-linux.sh;
-      cd "$TRAVIS_BUILD_DIR-build";
-      mkdir bin && cp ImageMosaicWall*.AppImage bin/ ;
-    fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-      cd "$TRAVIS_BUILD_DIR-build";
-      macdeployqt ImageMosaicWall.app -dmg;
-      mkdir bin && cp ImageMosaicWall*.dmg bin/ ;
-    fi
-  - ls -al bin/
+- ls -al releases/
 deploy:
   provider: releases
   api_key:
     secure: LJ0sgWZYotr+edurWc0n76wKYyrx6DYWHdZVs5ggneIhFELRHRdnULJqwfCXfK7z5QvRenozYwbnjDw5GF4PN5H9AD0c5Bl5NxXCOjnaLoGkXak3bbyLpVM1P/n8KsEnRdBsjxCYO2mOMHjyicXifQEhglJwjHK+rIf9tEjwbP5E0/joWlY8xFx5RXEo28HXRSSH7vhrx97zu7g3T3Ds/HNAKP9y2fQa9E0XJDvpmibt5n9D4vG9QAs/bzAw02XU4ZH4MmZBBZ+i0jVLZ8v1ctdcYlH4NXIAqLV4lvbfAgznqCuHRZNiCrhQxd7Gcm23ZA7sbveSykbFEYwIkDsvqPvHUsGcbx5n08/CE9CO3WnJhzCBR6ugG68tn5xjWM1YRP8DETYIUZsbDunIPmL9JZMBHmdZRUITdIUxgKD10fxhYbYDQKO0ZkTSph7spLkG3le/3+dT4OIdYI1+Nif43v+KzFmhLTxzSmgMwPqMTru8uaran1pNVUzPP3W903jfXvekC2m1yRXlCOwR5Iq8SR9rSHIIz9tfYITP/O7Hc1UaTdGp9BtnpnuPRb0m8qmzCtR+uu2pG6JFCjwRn1kUy59xk3f/iP0vqGRkPK2zRQm1nBLkTE+xZoZvUp9zLEVyZm4KJOblxeun2GpEYugS1dQGHZ0LP1tNFfqXkKzFFPc=
-  file: "bin/*"
+  file: "releases/*"
   file_glob: true
   skip_cleanup: true
   on:

@@ -8,14 +8,31 @@ project(ImageMosaicWall)
 
 cmake_minimum_required(VERSION "3.1.0")
 
+option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
+
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
-include(MacroInstall)
+if (ENABLE_DPLUGIN)
+    include(MacroInstall)
+endif()
+
+if(NOT ENABLE_DPLUGIN AND APPLE)
+  set(MACOSX_BUNDLE_ICON_FILE photils.icns)
+  set(OSX_APP_ICON ${CMAKE_CURRENT_SOURCE_DIR}/assets/imw-logo.icns)
+  set_source_files_properties(${OSX_APP_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+endif()
+
 include(FeatureSummary)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_AUTOMOC ON)
 
-option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
+if(CMAKE_VERSION VERSION_LESS "3.7.0")
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif()
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
 
 find_package(Qt5 "5.6.0" REQUIRED
              NO_MODULE COMPONENTS
@@ -50,6 +67,7 @@ set(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.cpp
                               ${CMAKE_SOURCE_DIR}/imageviewer.cpp
                               ${CMAKE_SOURCE_DIR}/imageprocessing.cpp
                               ${CMAKE_SOURCE_DIR}/progressbutton.cpp
+                              ${CMAKE_SOURCE_DIR}/asyncdirectoryscanner.cpp
 )
 
 qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
@@ -58,7 +76,7 @@ qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
 
 qt5_add_resources(imagemosaicwall_core_QRC_SRCS ${CMAKE_SOURCE_DIR}/assets.qrc)
 
-set(libimagemosaicwall_core_SRCS
+set(libimagemosaicwall_core_SRCS    
     ${imagemosaicwall_core_SRCS}
     ${imagemosaicwall_core_QRC_SRCS}
 )
@@ -69,7 +87,14 @@ if(NOT MSVC)
     target_compile_options(imagemosaicwallcore PRIVATE -fPIC)
 endif()
 
-add_executable(ImageMosaicWall ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+
+if(APPLE)
+  add_executable(ImageMosaicWall MACOSX_BUNDLE ${OSX_APP_ICON} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+else()
+  add_executable(ImageMosaicWall ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+endif()
+
+
 
 target_link_libraries(ImageMosaicWall
 
@@ -84,10 +109,24 @@ target_link_libraries(ImageMosaicWall
                       ${CMAKE_THREAD_LIBS_INIT}
 )
 
-install(TARGETS ImageMosaicWall RUNTIME DESTINATION bin)
+if(APPLE)
+  set(APPS "\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app")
+  set(DIRS "\${CMAKE_INSTALL_PREFIX}/share")
+
+  install(TARGETS ${PROJECT_NAME}
+    BUNDLE DESTINATION . COMPONENT Runtime
+    RUNTIME DESTINATION bin COMPONENT Runtime
+  )
+
+  install(CODE "
+    include(BundleUtilities)
+    fixup_bundle(\"${APPS}\"  \"\"  \"${DIRS}\")
+  " COMPONENT Runtime)
+else()
+  install(TARGETS ImageMosaicWall RUNTIME DESTINATION bin)
+endif()
 
 if (ENABLE_DPLUGIN)
     add_subdirectory(dplugin)
+    MACRO_ADD_UNINSTALL_TARGET()
 endif()
-
-MACRO_ADD_UNINSTALL_TARGET()

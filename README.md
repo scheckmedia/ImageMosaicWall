@@ -2,13 +2,14 @@
 
 This application allows you to create an image based on a bunch of other images. It looks like a mosaic effect. But on detail you can check the following video.
 
-[![Video](https://github.com/scheckmedia/ImageMosaicWall/blob/master/docs/placeholer.jpg?raw=true)](https://scheck-media.de/tmp/imw.mp4)
+[![](http://i3.ytimg.com/vi/FyXyUtVnVyQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=FyXyUtVnVyQ "")
 
 # Dependencies
 
 - Qt5.
 - Cmake 3.x.
 - Exiv2 0.27.x API.
+- extra-cmake-modules
 - digiKam 7.x plugin interface. <https://www.digikam.org> (optional)
 
 # Compiling and Installing

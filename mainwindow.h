@@ -26,7 +26,7 @@ public:
 
 private:
   void updateStatus();
-  void enableEnableUi(bool enabled);
+  void toggleUI(bool enabled);
   void loadImage(QString &);
   void loadImageFolder(QString &);
   void scaleLockedImageSize(bool senderIsWidth);
@@ -41,6 +41,8 @@ public slots:
   void onMosaicCreationFinished();
   void onImageDropped(QString image);
   void onFolderDropped(QString folder);
+  void onImageCellProgress();
+  void onImageLoadPorgress();
 
 private slots:
   void on_btnGenerate_clicked();
@@ -55,10 +57,9 @@ private:
   QFutureWatcher<QRgb> *m_imageScaling;
   QThread *m_mosaicGeneration;
   QMap<QString, QIcon> m_activeLoadingButtons;
-  QMovie m_loadingSequence;
   QSize m_lockedResolution;
 
-  const ushort m_variations[6] = {0, 3, 9, 11, 15, 19};
+  const ushort m_variations[6] = {0, 1, 3, 9, 11, 15};
   QString m_currentFolder;
   QString m_baseImagePath;
 };

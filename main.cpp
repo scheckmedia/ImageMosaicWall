@@ -1,13 +1,11 @@
-#include "mainwindow.h"
 #include <QApplication>
 #include <QFontDatabase>
+#include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
-    if (QFontDatabase::addApplicationFont(":/fonts/assets/MaterialIcons-Regular.ttf") < 0)
-        qWarning() << "MaterialIcons cannot be loaded !";
+    Q_INIT_RESOURCE(assets);
 
     if (QFontDatabase::addApplicationFont(":/fonts/assets/SourceSansPro-Regular.ttf") < 0)
         qWarning() << "SourceSansPro-Regular cannot be loaded !";

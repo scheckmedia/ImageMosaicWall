@@ -7,7 +7,6 @@
         <file>assets/down.png</file>
         <file>assets/up.png</file>
         <file>assets/info.png</file>
-        <file>assets/loader.gif</file>
         <file>assets/home.png</file>
         <file>assets/zoom_in.png</file>
         <file>assets/zoom_out.png</file>
@@ -16,12 +15,12 @@
         <file>assets/locked.png</file>
         <file>assets/generate.png</file>
         <file>assets/imw-logo.png</file>
+        <file>assets/cancel.png</file>
     </qresource>
     <qresource prefix="/styles">
         <file>default.qss</file>
     </qresource>
     <qresource prefix="/fonts">
-        <file>assets/MaterialIcons-Regular.ttf</file>
         <file>assets/SourceSansPro-Bold.ttf</file>
         <file>assets/SourceSansPro-Light.ttf</file>
         <file>assets/SourceSansPro-Regular.ttf</file>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>768</height>
+    <height>787</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -72,7 +72,7 @@
           <number>0</number>
          </property>
          <item row="0" column="0">
-          <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
            <property name="spacing">
             <number>10</number>
            </property>
@@ -100,7 +100,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Load Base Image</string>
+              <string> Load Base Image</string>
              </property>
              <property name="icon">
               <iconset resource="assets.qrc">
@@ -132,7 +132,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Set Image Folder</string>
+              <string> Set Image Folder</string>
              </property>
              <property name="icon">
               <iconset resource="assets.qrc">
@@ -177,6 +177,35 @@
              </property>
             </widget>
            </item>
+           <item alignment="Qt::AlignHCenter">
+            <widget class="QPushButton" name="btnCancel">
+             <property name="minimumSize">
+              <size>
+               <width>200</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string> Cancel</string>
+             </property>
+             <property name="icon">
+              <iconset resource="assets.qrc">
+               <normaloff>:/icons/assets/cancel.png</normaloff>:/icons/assets/cancel.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>32</width>
+               <height>32</height>
+              </size>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="QLabel" name="lblSettings">
              <property name="sizePolicy">
@@ -198,6 +227,16 @@
              <property name="spacing">
               <number>10</number>
              </property>
+             <item row="1" column="0" colspan="2">
+              <widget class="QLabel" name="lblVariation">
+               <property name="text">
+                <string>disabled</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
              <item row="0" column="0" colspan="2">
               <widget class="QSlider" name="slHistory">
                <property name="minimum">
@@ -226,16 +265,6 @@
                </property>
                <property name="tickInterval">
                 <number>1</number>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0" colspan="2">
-              <widget class="QLabel" name="lblVariation">
-               <property name="text">
-                <string>disabled</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -324,7 +353,7 @@
                 <number>1</number>
                </property>
                <property name="maximum">
-                <number>16512</number>
+                <number>32768</number>
                </property>
                <property name="value">
                 <number>3872</number>
@@ -374,7 +403,7 @@
                 <string/>
                </property>
                <property name="maximum">
-                <number>16512</number>
+                <number>32768</number>
                </property>
                <property name="value">
                 <number>2592</number>
@@ -439,7 +468,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Set Resolution</string>
+              <string> Set Resolution</string>
              </property>
              <property name="icon">
               <iconset resource="assets.qrc">
@@ -590,7 +619,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Create Mosqiac</string>
+              <string> Create Mosaic</string>
              </property>
              <property name="icon">
               <iconset resource="assets.qrc">
@@ -625,7 +654,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Save</string>
+              <string> Save</string>
              </property>
              <property name="icon">
               <iconset resource="assets.qrc">
