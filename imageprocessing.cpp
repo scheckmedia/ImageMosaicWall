@@ -231,8 +231,12 @@ QMap<QString, QColor> ImageProcessing::getImageMeanMap() const {
   return m_imageMeanMap;
 }
 
-bool ImageProcessing::getImportFolderCancled() const {
-  return m_importFolderCanceled.load();
+bool ImageProcessing::getImportFolderCanceled() const {
+  return m_importFolderCanceled;
+}
+
+void ImageProcessing::processCanceled(bool canceled) {
+  m_importFolderCanceled = canceled;
 }
 
 const QImage &ImageProcessing::getOutputImage() const {

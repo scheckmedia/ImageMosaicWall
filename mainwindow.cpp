@@ -12,8 +12,7 @@
 using namespace QtConcurrent;
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow),
-      m_loadingSequence(":/icons/assets/loader.gif") {
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
 
   QFile file(":/styles/default.qss");
@@ -21,10 +20,12 @@ MainWindow::MainWindow(QWidget *parent)
   QString styleSheet = QLatin1String(file.readAll());
   setStyleSheet(styleSheet);
 
+  ui->btnCancel->hide();
+
   ui->wImageContainer->layout()->addWidget(&m_imageView);
   // ui->wControls->move(this->size().width() - 400, this->size().height() -
   // 50);
-
+  auto mtx = std::make_shared<std::mutex>();
   qRegisterMetaType<GridPoint>("GridPoint");
   connect(ui->sbRows, SIGNAL(valueChanged(QString)), this,
           SLOT(onGridPropsValueChanged()));
@@ -33,12 +34,18 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->btnSetResolution, SIGNAL(clicked(bool)), this,
           SLOT(onOutputResolutionChanged()));
 
+  connect(ui->btnCancel, &QPushButton::clicked, [&]() {
+    qDebug() << "Cancel!";
+    m_imageProcessing.processCanceled(true);
+  });
+
   connect(&m_imageProcessing, &ImageProcessing::mosaicGenerated, &m_imageView,
           &ImageViewer::setLoadingMosaicAt);
-  connect(&m_imageProcessing, &ImageProcessing::imageProcessed,
-          ui->btnSetImageFolder, &ProgressButton::increment);
-  connect(&m_imageProcessing, &ImageProcessing::cellProcessed, ui->btnLoad,
-          &ProgressButton::increment);
+  connect(&m_imageProcessing, &ImageProcessing::imageProcessed, this,
+          &MainWindow::onImageLoadPorgress);
+
+  connect(&m_imageProcessing, &ImageProcessing::cellProcessed, this,
+          &MainWindow::onImageCellProgress);
 
   connect(&m_imageView, &ImageViewer::folderDropped, this,
           &MainWindow::onFolderDropped);
@@ -113,9 +120,11 @@ void MainWindow::updateStatus() {
 
   if (!m_baseImage.isNull())
     ui->btnSetResolution->setEnabled(true);
+
+  ui->btnCancel->hide();
 }
 
-void MainWindow::enableEnableUi(bool enabled) {
+void MainWindow::toggleUI(bool enabled) {
   ui->btnGenerate->setEnabled(enabled);
   ui->btnLoad->setEnabled(enabled);
   ui->btnSave->setEnabled(enabled);
@@ -143,14 +152,13 @@ void MainWindow::loadImage(QString &filename) {
   if (ui->btnLockRatio->isChecked())
     m_lockedResolution = m_baseImage.size();
 
-  updateStatus();
-
   ui->sbWidth->setValue(m_baseImage.width());
   ui->sbHeight->setValue(m_baseImage.height());
 
   QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
 
   ui->btnLoad->setRange(0, gridSize.width() * gridSize.height());
+  ui->btnCancel->show();
   m_imageView.setImage(m_baseImage);
   m_imageView.setGrid(gridSize);
 
@@ -161,7 +169,12 @@ void MainWindow::loadImage(QString &filename) {
   connect(watcher, &QFutureWatcher<void>::finished, [=]() {
     ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
     watcher->deleteLater();
+    updateStatus();
+    toggleUI(true);
   });
+
+  toggleUI(false);
+  m_imageProcessing.processCanceled(false);
   watcher->setFuture(f);
 }
 
@@ -184,18 +197,23 @@ void MainWindow::loadImageFolder(QString &path) {
   }
 
   ui->btnSetImageFolder->setRange(0, imageList.size());
+  ui->btnCancel->show();
 
   QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
   QFuture<void> f = QtConcurrent::run([=]() {
     m_imageProcessing.processMosaicImages(imageList);
-    if (!m_imageProcessing.getImportFolderCancled())
+    if (!m_imageProcessing.getImportFolderCanceled())
       ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
   });
 
   connect(watcher, &QFutureWatcher<void>::finished, [=]() {
-    updateStatus();
     watcher->deleteLater();
+    updateStatus();
+    toggleUI(true);
   });
+
+  toggleUI(false);
+  m_imageProcessing.processCanceled(false);
   watcher->setFuture(f);
 }
 
@@ -231,6 +249,8 @@ void MainWindow::onGridPropsValueChanged() {
 
   QSize gridSize(ui->sbCols->value(), ui->sbRows->value());
   m_imageView.setGrid(gridSize);
+  ui->btnLoad->setRange(0, gridSize.width() * gridSize.height());
+
   QtConcurrent::run([=]() {
     m_imageProcessing.processGrid(m_baseImage, gridSize);
     ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
@@ -260,8 +280,28 @@ void MainWindow::onImageDropped(QString image) { loadImage(image); }
 
 void MainWindow::onFolderDropped(QString folder) { loadImageFolder(folder); }
 
+void MainWindow::onImageCellProgress() {
+  ui->btnLoad->increment();
+
+  auto current = ui->btnLoad->currentValue();
+  auto max = ui->btnLoad->maxValue();
+  auto message = tr("%1 of %2 cells processed").arg(current).arg(max);
+
+  ui->lblStatus->setText(message);
+}
+
+void MainWindow::onImageLoadPorgress() {
+  ui->btnSetImageFolder->increment();
+
+  auto current = ui->btnSetImageFolder->currentValue();
+  auto max = ui->btnSetImageFolder->maxValue();
+  auto message = tr("%1 of %2 images processed").arg(current).arg(max);
+
+  ui->lblStatus->setText(message);
+}
+
 void MainWindow::on_btnGenerate_clicked() {
-  enableEnableUi(false);
+  toggleUI(false);
   m_imageView.clearPreview();
   m_mosaicGeneration = QThread::create([&] {
     QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
@@ -273,7 +313,7 @@ void MainWindow::on_btnGenerate_clicked() {
     if (!success)
       return;
 
-    enableEnableUi(true);
+    toggleUI(true);
   });
   connect(m_mosaicGeneration, SIGNAL(finished()), this,
           SLOT(onMosaicCreationFinished()));

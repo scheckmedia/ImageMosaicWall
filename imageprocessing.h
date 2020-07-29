@@ -67,7 +67,8 @@ public:
   const QImage &getOutputImage() const;
   QMap<QString, QColor> getImageMeanMap() const;
 
-  bool getImportFolderCancled() const;
+  bool getImportFolderCanceled() const;
+  void processCanceled(bool canceled);
 
 private:
   std::vector<QColor> m_gridColorMap;

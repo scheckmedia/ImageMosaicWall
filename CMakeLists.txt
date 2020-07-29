@@ -15,7 +15,7 @@ endif()
 
 include(FeatureSummary)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -72,8 +72,6 @@ set(libimagemosaicwall_core_SRCS
     ${imagemosaicwall_core_SRCS}
     ${imagemosaicwall_core_QRC_SRCS}
 )
-
-message("blaa ${libimagemosaicwall_core_SRCS}")
 
 add_library(imagemosaicwallcore STATIC ${libimagemosaicwall_core_SRCS})
 
