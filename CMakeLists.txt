@@ -8,6 +8,8 @@ project(ImageMosaicWall)
 
 cmake_minimum_required(VERSION "3.1.0")
 
+option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
+
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 if (ENABLE_DPLUGIN)
     include(MacroInstall)
@@ -25,7 +27,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
 
 find_package(Qt5 "5.6.0" REQUIRED
              NO_MODULE COMPONENTS
@@ -60,6 +61,7 @@ set(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.cpp
                               ${CMAKE_SOURCE_DIR}/imageviewer.cpp
                               ${CMAKE_SOURCE_DIR}/imageprocessing.cpp
                               ${CMAKE_SOURCE_DIR}/progressbutton.cpp
+                              ${CMAKE_SOURCE_DIR}/asyncdirectoryscanner.cpp
 )
 
 qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
