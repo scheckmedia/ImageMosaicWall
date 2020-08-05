@@ -1,25 +1,27 @@
 /*
-  orange: #AD3600
-  lightblue: #A3BED2
-  darkgrey: #333333
-  grey: #515151
-  lightgrey: #989899
+  nord color palette
+  https://www.nordtheme.com/docs/colors-and-palettes
 
+  bg: #303643
+  darkbg: #2a2f3a
+  lightbg: #3B4252
+  btn: #98abb2
+  btn hover: #4c566a
 */
 
 
 QMainWindow {
-  background-color: #333333;
+  background-color: #2a2f3a;
   font-family: 'Source Sans Pro';
 }
 
 .MainWindow QLabel {
-  color: #989899;
+  color: #98abb2;
   font-family: 'Source Sans Pro';
 }
 
 #btnLockRatio {
-  background-color: #333333;
+  background-color: #98abb2;
   border: 1px solid #515151;
 }
 
@@ -29,16 +31,16 @@ QMainWindow {
 }
 
 #btnLockRatio:checked {
-  background-color: #A3BED2;
-  border: 1px solid #A3BED2;
+  background-color: #98abb2;
+  border: 1px solid #98abb2;
 }
 
 #wControls {
-  background-color: #bb333333;
+  background-color: #303643;
 }
 
 #ImageViewer {
-  background-color: #515151;
+  background-color: #303643;
 }
 
 #lblGrid, #lblSettings, #lblOutputResolution, #lblMosaicEffect {
@@ -56,21 +58,21 @@ QPushButton, ProgressButton {
   font-family: 'Source Sans Pro';
   border: none;
   min-height: 48px;
-  background: #A3BED2;
+  background: #98abb2;
   background-position: left;
 }
 
 ProgressButton {
-  qproperty-progressColor: #80333333;
+  qproperty-progressColor: #80303643;
   qproperty-progressLineWidth: 4;
 }
 
 QPushButton:disabled, ProgressButton:disabled {
-  background: #50A3BED2;
+  background: #4c566a;
 }
 
 QPushButton:hover, ProgressButton:hover {
-  background-color: #515151;
+  background-color: #4c566a;
 }
 
 QPushButton:pressed, ProgressButton:pressed {
@@ -79,7 +81,7 @@ QPushButton:pressed, ProgressButton:pressed {
 
 QSpinBox {
   font-family: 'Source Sans Pro';
-  background-color: #515151;
+  background-color: #3B4252;
   border: none;
   color: #989899;
   height: 30px;
@@ -88,7 +90,7 @@ QSpinBox {
 
 QSpinBox::down-button, QSpinBox::up-button {
   color: #989899;
-  background-color: #989899;
+  background-color: #98abb2;
   width: 20px;
   height: 20px;
   border-width: 1px;
