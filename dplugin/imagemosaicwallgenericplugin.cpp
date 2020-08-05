@@ -39,16 +39,19 @@
 
 #include "mainwindow.h"
 
+// NOTE: need to be done outside plugin namespace.
+void initImageMosaicWallResource()
+{
+    Q_INIT_RESOURCE(assets);
+}
+
 namespace DigikamGenericImageMosaicWallPlugin
 {
 
 ImageMosaicWallPlugin::ImageMosaicWallPlugin(QObject* const parent)
     : DPluginGeneric(parent)
 {
-    if (QFontDatabase::addApplicationFont(":/fonts/assets/MaterialIcons-Regular.ttf") < 0)
-    {
-        qWarning() << "MaterialIcons cannot be loaded !";
-    }
+    initImageMosaicWallResource();
 }
 
 ImageMosaicWallPlugin::~ImageMosaicWallPlugin()
@@ -72,12 +75,12 @@ QIcon ImageMosaicWallPlugin::icon() const
 
 QString ImageMosaicWallPlugin::description() const
 {
-    return QString::fromUtf8("A plugin to create an image based on a bunch of other images.");
+    return QString::fromUtf8("A tool to create an image based on a bunch of other images.");
 }
 
 QString ImageMosaicWallPlugin::details() const
 {
-    return QString::fromUtf8("<p>This plugin allows you to create an image based on a bunch of other images. "
+    return QString::fromUtf8("<p>This tool allows you to create an image based on a bunch of other images. "
                              "It looks like a mosaic effect.</p>");
 }
 
@@ -86,7 +89,7 @@ QList<DPluginAuthor> ImageMosaicWallPlugin::authors() const
     return QList<DPluginAuthor>()
             << DPluginAuthor(QString::fromUtf8("Tobias Scheck"),
                              QString::fromUtf8("tobias at scheck-media dot de"),
-                             QString::fromUtf8("(C) 2018"))
+                             QString::fromUtf8("(C) 2018-2020"))
             << DPluginAuthor(QString::fromUtf8("Gilles Caulier"),
                              QString::fromUtf8("caulier dot gilles at gmail dot com"),
                              QString::fromUtf8("(C) 2020"))
