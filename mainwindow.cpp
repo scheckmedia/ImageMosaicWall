@@ -125,9 +125,11 @@ void MainWindow::updateStatus()
 
 void MainWindow::toggleUI(bool enabled)
 {
-    ui->btnGenerate->setEnabled(enabled);
+    auto out = m_imageProcessing.getOutputImage();
+    ui->btnGenerate->setEnabled(enabled && m_imageProcessing.isReady());
+    ui->btnSave->setEnabled(enabled && out != nullptr);
+
     ui->btnLoad->setEnabled(enabled);
-    ui->btnSave->setEnabled(enabled);
     ui->btnSetResolution->setEnabled(enabled);
     ui->btnSetImageFolder->setEnabled(enabled);
 
@@ -287,7 +289,7 @@ void MainWindow::onOutputResolutionChanged()
 void MainWindow::onMosaicCreationFinished()
 {
     m_imageView.setMosaicLoadingDone();
-    m_imageView.setPreview(m_imageProcessing.getOutputImage());
+    m_imageView.setPreview(*m_imageProcessing.getOutputImage());
     ui->btnSave->setEnabled(true);
     delete m_mosaicGeneration;
 }
@@ -354,7 +356,7 @@ void MainWindow::on_btnSave_clicked()
                                                     m_baseImagePath.isEmpty() ? QDir::homePath() : m_baseImagePath,
                                                     tr("JPEG (*.jpg);;PNG (*.png)"),
                                                     &defaultFileExtension);
-    m_imageProcessing.getOutputImage().save(filename);
+    m_imageProcessing.getOutputImage()->save(filename);
 }
 
 void MainWindow::on_btnSetImageFolder_clicked()
