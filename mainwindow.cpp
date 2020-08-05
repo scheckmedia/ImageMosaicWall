@@ -188,39 +188,41 @@ void MainWindow::loadImageFolder(QString &path)
                                        << "*.jpeg"
                                        << "*.bmp";
 
-    auto scanner = std::make_unique<AsyncDirectoryScanner>(
+    auto scanner = new AsyncDirectoryScanner(
         path, filter, QDir::Files | QDir::Dirs | QDir::NoDot | QDir::NoDotDot, QDirIterator::Subdirectories);
 
-    connect(scanner.get(), &AsyncDirectoryScanner::fileScanned, [&](const QString file) {
-        qDebug() << "scan file: " << file;
-        auto message = tr("%1 images processed").arg(scanner->numFilesScanned());
+    connect(scanner, &AsyncDirectoryScanner::fileScanned, this, [=](const QString file) {
+        auto message = tr("%1 images scanned").arg(scanner->numFilesScanned());
         ui->lblStatus->setText(message);
     });
 
+    connect(scanner, &AsyncDirectoryScanner::finished, this, [=]() {
+        qDebug() << "finished scanning";
+        auto imageList = scanner->scannedFiles();
+
+        ui->btnSetImageFolder->setRange(0, imageList.size());
+        ui->btnCancel->show();
+
+        QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
+        QFuture<void> f = QtConcurrent::run([=]() {
+            m_imageProcessing.processMosaicImages(imageList);
+            if (!m_imageProcessing.skipBackgroundProcesses())
+                ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
+        });
+
+        connect(watcher, &QFutureWatcher<void>::finished, [=]() {
+            watcher->deleteLater();
+            updateStatus();
+            toggleUI(true);
+        });
+
+        toggleUI(false);
+        m_imageProcessing.processCanceled(false);
+        watcher->setFuture(f);
+        scanner->deleteLater();
+    });
+
     scanner->start();
-    scanner->wait();
-
-    auto imageList = scanner->scannedFiles();
-
-    ui->btnSetImageFolder->setRange(0, imageList.size());
-    ui->btnCancel->show();
-
-    QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
-    QFuture<void> f = QtConcurrent::run([=]() {
-        m_imageProcessing.processMosaicImages(imageList);
-        if (!m_imageProcessing.skipBackgroundProcesses())
-            ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
-    });
-
-    connect(watcher, &QFutureWatcher<void>::finished, [=]() {
-        watcher->deleteLater();
-        updateStatus();
-        toggleUI(true);
-    });
-
-    toggleUI(false);
-    m_imageProcessing.processCanceled(false);
-    watcher->setFuture(f);
 }
 
 void MainWindow::scaleLockedImageSize(bool senderIsWidth)

@@ -211,7 +211,7 @@ void ImageViewer::dropEvent(QDropEvent *event)
         QFileInfo info(mimeData->urls().first().path());
 
         if (info.isDir())
-            emit folderDropped(info.path());
+            emit folderDropped(info.absoluteFilePath());
         else if (info.isFile() && QImageReader::imageFormat(info.absoluteFilePath()).isEmpty() == false)
             emit imageDropped(info.absoluteFilePath());
     }

@@ -58,7 +58,7 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
                           &ImageProcessing::calculateMosaicPositions,
                           gridCellSize,
                           gridSize,
-                          t * numCellsPerThread,
+                          t * itemsPerThread,
                           numCellsPerThread);
     }
 
@@ -114,12 +114,15 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
 void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
 {
     std::function<void(const QString)> scale = [&](const QString imageFileName) {
-        if (m_skipBackgroundProcess.load())
+        if (m_skipBackgroundProcess)
             return;
 
         QImage image = extractThumbnail(imageFileName, QSize(128, 128));
         if (image.isNull())
             image = QImage(imageFileName).scaled(QSize(128, 128), Qt::IgnoreAspectRatio, Qt::FastTransformation);
+
+        if (image.isNull())
+            return;
 
         uint64_t meanR = 0;
         uint64_t meanG = 0;
@@ -138,9 +141,10 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
             }
         }
 
-        meanR /= (image.width() * image.height());
-        meanG /= (image.width() * image.height());
-        meanB /= (image.width() * image.height());
+        auto dim = image.width() * image.height();
+        meanR /= dim;
+        meanG /= dim;
+        meanB /= dim;
 
         if (m_skipBackgroundProcess)
             return;
@@ -155,20 +159,26 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
     QtConcurrent::map(imageList, scale).waitForFinished();
 }
 
-void ImageProcessing::calculateMosaicPositions(const QSize cellSize, const QSize gridSize, const int pos, const int length)
+void ImageProcessing::calculateMosaicPositions(const QSize cellSize,
+                                               const QSize gridSize,
+                                               const int startPos,
+                                               const int length)
 {
     QVector<QString> history;
     m_gridMapCache.clear();
 
     std::vector<uint32_t> positions;
-    for (uint32_t i = pos; i < pos + length; ++i)
+    for (uint32_t i = startPos; i < startPos + length; ++i)
         positions.push_back(i);
 
     std::random_shuffle(positions.begin(), positions.end());
-    for (uint32_t pos : positions)
+    for (auto pos : positions)
     {
         if (m_skipBackgroundProcess)
+        {
+            qDebug() << "skip because of cancel";
             return;
+        }
 
         history.clear();
         double bestDistance = INT_MAX;
@@ -186,10 +196,10 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize, const QSize
             {
                 GridPoint pDelta(p.x() + kx, p.y() + ky);
 
-                if (pDelta.x() < 0 || pDelta.x() > gridSize.width())
+                if (pDelta.x() < 0 || pDelta.x() > gridSize.width() - 1)
                     continue;
 
-                if (pDelta.y() < 0 || pDelta.y() > gridSize.height())
+                if (pDelta.y() < 0 || pDelta.y() > gridSize.height() - 1)
                     continue;
 
                 if (m_gridMapCache.contains(pDelta))
@@ -215,8 +225,8 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize, const QSize
         if (image.isNull())
             image = QImage(imagePath);
 
-        QImage cellImage = image.scaled(cellSize + QSize(2, 2), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
-                               .copy(QRect(QPoint(0, 0), cellSize + QSize(2, 2)));
+        QImage cellImage = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
+                               .copy(QRect(QPoint(0, 0), cellSize));
 
         QMutexLocker lock(&m_lockMean);
         m_gridMapCache.insert(p, imagePath);
@@ -286,8 +296,8 @@ void ImageProcessing::processGrid(const QImage &baseImage, QSize gridSize)
 
     m_gridColorMap.resize(numCells);
 
-    int gx = baseImage.width() / (gridSize.width() - 1);
-    int gy = baseImage.height() / (gridSize.height() - 1);
+    int gx = baseImage.width() / gridSize.width();
+    int gy = baseImage.height() / gridSize.height();
 
     QSize gridCellSize(gx, gy);
 

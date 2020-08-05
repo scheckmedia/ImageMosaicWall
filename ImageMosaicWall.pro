@@ -30,14 +30,16 @@ SOURCES += \
         mainwindow.cpp \
     imageviewer.cpp \
     imageprocessing.cpp \
-    progressbutton.cpp
+    progressbutton.cpp \
+    asyncdirectoryscanner.cpp
 
 
 HEADERS += \
         mainwindow.h \
     imageviewer.h \
     imageprocessing.h \
-    progressbutton.h
+    progressbutton.h \
+    asyncdirectoryscanner.h
 
 
 FORMS += \

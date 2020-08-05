@@ -15,11 +15,13 @@ AsyncDirectoryScanner::AsyncDirectoryScanner(const QString path,
 
 void AsyncDirectoryScanner::run()
 {
+    m_numScannedFiles = 0;
     while (!m_isStopped && m_dirIterator.hasNext())
     {
         m_dirIterator.next();
 
         QString f = m_dirIterator.filePath();
+        ++m_numScannedFiles;
         m_fileList.append(f);
         emit fileScanned(f);
     }
@@ -32,7 +34,7 @@ QStringList AsyncDirectoryScanner::scannedFiles() const
 
 int AsyncDirectoryScanner::numFilesScanned() const
 {
-    return m_fileList.size();
+    return m_numScannedFiles;
 }
 
 void AsyncDirectoryScanner::stop()
