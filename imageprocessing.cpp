@@ -225,28 +225,28 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize,
         if (image.isNull())
             image = QImage(imagePath);
 
-        QImage cellImage = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
-                               .copy(QRect(QPoint(0, 0), cellSize));
+        QImage cellImage = image.scaled(cellSize + QSize(2, 2), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
+                               .copy(QRect(QPoint(1, 1), cellSize + QSize(1, 1)));
 
         QMutexLocker lock(&m_lockMean);
         m_gridMapCache.insert(p, imagePath);
         lock.unlock();
         emit mosaicGenerated(p);
 
-        double gx = m_outputImage.get()->width() / (double)gridSize.width();
-        double gy = m_outputImage.get()->height() / (double)gridSize.height();
+        double gx = m_outputImage.get()->width() / static_cast<double>(gridSize.width());
+        double gy = m_outputImage.get()->height() / static_cast<double>(gridSize.height());
         int nx = 0;
         int ny = 0;
 
         for (int y = 0; y < cellImage.height(); ++y)
         {
-            ny = round(p.y() * gy + y);
+            ny = ceil(p.y() * gy + y);
             if (ny < 0 || ny >= m_outputImage->height())
                 continue;
 
             for (int x = 0; x < cellImage.width(); ++x)
             {
-                nx = round(p.x() * gx + x);
+                nx = ceil(p.x() * gx + x);
                 if (nx < 0 || nx >= m_outputImage->width())
                     continue;
 
@@ -282,9 +282,9 @@ void ImageProcessing::processCanceled(bool canceled)
     m_skipBackgroundProcess = canceled;
 }
 
-const QImage &ImageProcessing::getOutputImage() const
+const QImage *ImageProcessing::getOutputImage() const
 {
-    return *m_outputImage.get();
+    return m_outputImage.get();
 }
 
 void ImageProcessing::processGrid(const QImage &baseImage, QSize gridSize)
