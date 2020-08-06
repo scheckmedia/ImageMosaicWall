@@ -16,6 +16,8 @@ if (ENABLE_DPLUGIN)
 endif()
 
 include(FeatureSummary)
+#
+include(FindKNNCPP)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -40,6 +42,9 @@ find_package(Threads)
 
 find_package(exiv2 REQUIRED)
 
+find_package(KNNCPP REQUIRED)
+find_package(Eigen3 REQUIRED)
+
 set_package_properties("exiv2"     PROPERTIES
                        DESCRIPTION "Required to build digiKam"
                        URL         "https://www.exiv2.org"
@@ -52,6 +57,8 @@ include_directories($<TARGET_PROPERTY:exiv2lib,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt5::Core,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt5::Gui,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt5::Concurrent,INTERFACE_INCLUDE_DIRECTORIES>
+                    ${KNNCPP_INCLUDE_DIR}
+                    ${EIGEN3_INCLUDE_DIRS}
 
                     ${CMAKE_BINARY_DIR}
                     ${CMAKE_SOURCE_DIR}

@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QPoint>
 #include <QtConcurrent>
+#include <knn/kdtree_minkowski.h>
 
 struct ColorXYZ
 {
@@ -37,6 +38,8 @@ struct GridPoint : public QPoint
 
     bool operator==(const GridPoint &other) const { return this->x() == other.x() && this->y() == other.y(); }
 };
+
+typedef knn::KDTreeMinkowski<double, knn::ManhattenDistance<double>> kdtree;
 
 Q_DECLARE_METATYPE(GridPoint)
 
@@ -82,6 +85,9 @@ private:
     std::shared_ptr<QImage> m_outputImage;
     std::atomic<bool> m_skipBackgroundProcess;
     int m_historySize;
+
+    kdtree m_kdTree;
+    QStringList m_kdMapping;
 };
 
 /**

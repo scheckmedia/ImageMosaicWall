@@ -151,6 +151,21 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
     };
 
     QtConcurrent::map(imageList, scale).waitForFinished();
+
+    // build tree
+    Eigen::MatrixXd dataPoints(3, m_imageMeanMap.size());
+    uint32_t col = 0;
+    for (QString meanKey : m_imageMeanMap.keys())
+    {
+        m_kdMapping.push_back(meanKey);
+        auto c = toLab(m_imageMeanMap[meanKey]);
+
+        dataPoints.col(col++) << c.L, c.a, c.b;
+    }
+
+    m_kdTree.setData(dataPoints, true);
+    m_kdTree.setThreads(1);
+    m_kdTree.build();
 }
 
 void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int startPos, const int length)
@@ -202,21 +217,45 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
             }
         }
 
+        knn::Matrixi indices;
+        Eigen::MatrixXd distances;
+        Eigen::MatrixXd query(3, 1);
+        query << cellMeanLab.L, cellMeanLab.a, cellMeanLab.b;
+
+        try
+        {
+            m_kdTree.query(query, m_historySize + 5, indices, distances);
+        }
+        catch (std::runtime_error &e)
+        {
+            qDebug() << e.what();
+        }
+
+        for (int i = 0; i < indices.rows(); ++i)
+        {
+            imagePath = m_kdMapping[indices(i, 0)];
+
+            if (history.contains(imagePath))
+                continue;
+            else
+                break;
+        }
+
         // brute force knn should be replaced by kd-tree
         // this is the bottleneck with ~30 ms per cell
-        for (auto &image : m_imageMeanMap.keys())
-        {
-            QColor c = m_imageMeanMap.value(image);
-            ColorLab imageMean = toLab(c);
+        //        for (auto &image : m_imageMeanMap.keys())
+        //        {
+        //            QColor c = m_imageMeanMap.value(image);
+        //            ColorLab imageMean = toLab(c);
 
-            double dist = calculateDistance(cellMeanLab, imageMean);
+        //            double dist = calculateDistance(cellMeanLab, imageMean);
 
-            if (dist < bestDistance && history.contains(image) == false)
-            {
-                imagePath = image;
-                bestDistance = dist;
-            }
-        }
+        //            if (dist < bestDistance && history.contains(image) == false)
+        //            {
+        //                imagePath = image;
+        //                bestDistance = dist;
+        //            }
+        //        }
 
         QImage image = extractThumbnail(imagePath, cellSize);
         if (image.isNull())
