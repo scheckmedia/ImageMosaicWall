@@ -62,9 +62,9 @@ signals:
     void imageProcessed(const QString image);
 
 private:
-    void calculateGridCellsMean(const QImage &, const QSize &, const QSize &, std::vector<QColor> &, int, int);
+    void calculateGridCellsMean(const QImage &, const QSize &, std::vector<QColor> &, int, int);
     void calculateImageMeanMap(const QList<QString>);
-    void calculateMosaicPositions(const QSize, const QSize, const int, const int);
+    void calculateMosaicPositions(const QSize, const int, const int);
     double calculateDistance(QColor rhs, QColor lhs) const;
     double calculateDistance(ColorLab rhs, ColorLab lhs) const;
 

@@ -33,11 +33,6 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
     m_outputSize = outputSize;
     m_historySize = history;
 
-    int gx = m_outputSize.width() / (gridSize.width() - 1);
-    int gy = m_outputSize.height() / (gridSize.height() - 1);
-
-    QSize gridCellSize(gx, gy);
-
     int maxThreads = QThreadPool::globalInstance()->maxThreadCount();
     int numCells = gridSize.width() * gridSize.height();
     int itemsPerThread = numCells / maxThreads;
@@ -53,13 +48,8 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
             numCellsPerThread += numCells % maxThreads;
         }
 
-        QtConcurrent::run(&pool,
-                          this,
-                          &ImageProcessing::calculateMosaicPositions,
-                          gridCellSize,
-                          gridSize,
-                          t * itemsPerThread,
-                          numCellsPerThread);
+        QtConcurrent::run(
+            &pool, this, &ImageProcessing::calculateMosaicPositions, gridSize, t * itemsPerThread, numCellsPerThread);
     }
 
     pool.waitForDone();
@@ -67,13 +57,17 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
 }
 
 void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
-                                             const QSize &gridCellSize,
                                              const QSize &gridSize,
                                              std::vector<QColor> &colorMap,
                                              int pos,
                                              int numCells)
 {
-    int nx = 0, ny = 0, g = pos, gx = 0, gy = 0;
+    int nx = 0, ny = 0, g = pos;
+    double gx = baseImage.width() / static_cast<float>(gridSize.width());
+    double gy = baseImage.height() / static_cast<float>(gridSize.height());
+
+    QSize gridCellSize(floor(gx), floor(gy));
+
     int numberOfPixel = gridCellSize.width() * gridCellSize.height();
 
     for (; g < pos + numCells; ++g)
@@ -159,13 +153,14 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
     QtConcurrent::map(imageList, scale).waitForFinished();
 }
 
-void ImageProcessing::calculateMosaicPositions(const QSize cellSize,
-                                               const QSize gridSize,
-                                               const int startPos,
-                                               const int length)
+void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int startPos, const int length)
 {
     QVector<QString> history;
     m_gridMapCache.clear();
+
+    double gx = ceil(m_outputSize.width() / static_cast<float>(gridSize.width()));
+    double gy = ceil(m_outputSize.height() / static_cast<float>(gridSize.height()));
+    QSize cellSize(gx, gy);
 
     std::vector<uint32_t> positions;
     for (uint32_t i = startPos; i < startPos + length; ++i)
@@ -207,6 +202,8 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize,
             }
         }
 
+        // brute force knn should be replaced by kd-tree
+        // this is the bottleneck with ~30 ms per cell
         for (auto &image : m_imageMeanMap.keys())
         {
             QColor c = m_imageMeanMap.value(image);
@@ -225,28 +222,26 @@ void ImageProcessing::calculateMosaicPositions(const QSize cellSize,
         if (image.isNull())
             image = QImage(imagePath);
 
-        QImage cellImage = image.scaled(cellSize + QSize(2, 2), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
-                               .copy(QRect(QPoint(1, 1), cellSize + QSize(1, 1)));
+        QImage cellImage = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
+                               .copy(QRect(QPoint(0, 0), cellSize));
 
         QMutexLocker lock(&m_lockMean);
         m_gridMapCache.insert(p, imagePath);
         lock.unlock();
         emit mosaicGenerated(p);
 
-        double gx = m_outputImage.get()->width() / static_cast<double>(gridSize.width());
-        double gy = m_outputImage.get()->height() / static_cast<double>(gridSize.height());
         int nx = 0;
         int ny = 0;
 
-        for (int y = 0; y < cellImage.height(); ++y)
+        for (int y = 0; y < cellSize.height(); ++y)
         {
-            ny = ceil(p.y() * gy + y);
+            ny = p.y() * gy + y;
             if (ny < 0 || ny >= m_outputImage->height())
                 continue;
 
-            for (int x = 0; x < cellImage.width(); ++x)
+            for (int x = 0; x < cellSize.width(); ++x)
             {
-                nx = ceil(p.x() * gx + x);
+                nx = p.x() * gx + x;
                 if (nx < 0 || nx >= m_outputImage->width())
                     continue;
 
@@ -296,11 +291,6 @@ void ImageProcessing::processGrid(const QImage &baseImage, QSize gridSize)
 
     m_gridColorMap.resize(numCells);
 
-    int gx = baseImage.width() / gridSize.width();
-    int gy = baseImage.height() / gridSize.height();
-
-    QSize gridCellSize(gx, gy);
-
     int numCellsPerThread = itemsPerThread;
     for (int t = 0; t < maxThreads; ++t)
     {
@@ -310,8 +300,7 @@ void ImageProcessing::processGrid(const QImage &baseImage, QSize gridSize)
         }
 
         std::function<void()> meanFnc = [=]() {
-            this->calculateGridCellsMean(
-                baseImage, gridCellSize, gridSize, m_gridColorMap, t * itemsPerThread, numCellsPerThread);
+            this->calculateGridCellsMean(baseImage, gridSize, m_gridColorMap, t * itemsPerThread, numCellsPerThread);
         };
 
         QtConcurrent::run(&pool, meanFnc);

@@ -50,11 +50,6 @@ void ImageViewer::wheelEvent(QWheelEvent *event)
     const QPointF move = p1mouse - event->pos(); // The move
     horizontalScrollBar()->setValue(move.x() + horizontalScrollBar()->value());
     verticalScrollBar()->setValue(move.y() + verticalScrollBar()->value());
-
-    double f = transform().m11();
-    qDebug() << transform() << " m1: " << f << scene()->width() * f;
-    qDebug() << "zoom: " << (f * (double)m_baseImage.size().width()) << (f * (double)m_baseImage.size().height());
-    qDebug() << "zoom 2: " << (factor);
 }
 
 void ImageViewer::fitToScene(const QImage &img)
@@ -94,9 +89,9 @@ void ImageViewer::setGrid(QSize gridResolution)
 {
     clearPreview();
     m_gridResolution = gridResolution;
-    double gx = m_baseImage.width() / (double)gridResolution.width();
-    double gy = m_baseImage.height() / (double)gridResolution.height();
-    qDebug() << gx << " x " << gy;
+
+    double gx = ceil(m_baseImage.width() / static_cast<double>(gridResolution.width()));
+    double gy = ceil(m_baseImage.height() / static_cast<double>(gridResolution.height()));
 
     if (m_grid != nullptr)
     {
@@ -106,29 +101,32 @@ void ImageViewer::setGrid(QSize gridResolution)
         }
     }
 
-    for (int x = 0; x < gridResolution.width(); ++x)
+    for (int x = 0; x < m_baseImage.width(); x += gx)
     {
-        QGraphicsLineItem *s = new QGraphicsLineItem(QLineF(QPointF(x * gx, 0), QPointF(x * gx, m_baseImage.height())));
+        QGraphicsLineItem *s = new QGraphicsLineItem(QLine(QPoint(x, 0), QPoint(x, m_baseImage.height())));
         m_grid->addToGroup(s);
     }
 
-    for (int y = 0; y < gridResolution.height(); y++)
+    for (int y = 0; y < m_baseImage.height(); y += gy)
     {
-        QGraphicsLineItem *s = new QGraphicsLineItem(QLine(QPoint(0, y * gy), QPoint(m_baseImage.width(), y * gy)));
+        QGraphicsLineItem *s = new QGraphicsLineItem(QLine(QPoint(0, y), QPoint(m_baseImage.width(), y)));
         m_grid->addToGroup(s);
     }
 }
 
 void ImageViewer::setLoadingMosaicAt(const GridPoint p)
 {
-    double gx = m_baseImage.width() / (double)m_gridResolution.width();
-    double gy = m_baseImage.height() / (double)m_gridResolution.height();
-    QSizeF cellSize(gx, gy);
+    double gx = ceil(m_baseImage.width() / static_cast<double>(m_gridResolution.width()));
+    double gy = ceil(m_baseImage.height() / static_cast<double>(m_gridResolution.height()));
+    QSize cellSize(gx, gy);
 
+    auto target = QPointF(QPoint(p.x() * cellSize.width(), p.y() * cellSize.height()));
+    if (target.x() >= m_baseImage.width() || target.y() >= m_baseImage.height())
+        return;
     QImage background(cellSize.width(), cellSize.height(), QImage::Format::Format_ARGB32);
     background.fill(QColor(128, 0, 0));
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap::fromImage(background));
-    item->setPos(QPointF(p.x() * cellSize.width(), p.y() * cellSize.height()));
+    item->setPos(target);
     item->setOpacity(0.8);
 
     m_mosaicLoading->addToGroup(item);
@@ -152,7 +150,6 @@ void ImageViewer::zoomOut()
     if (zoomLevel > 0)
     {
         setTransform(QTransform(zoomLevel, 0, 0, 0, zoomLevel, 0, 0, 0, 1));
-        qDebug() << "out: " << zoomLevel;
     }
 }
 
