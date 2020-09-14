@@ -9,6 +9,7 @@
 #include "asyncdirectoryscanner.h"
 #include "progressbutton.h"
 #include "ui_mainwindow.h"
+#include "i18nutils.h"
 
 using namespace QtConcurrent;
 
@@ -17,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    s_initI18nResource();
+    s_loadI18n(QLatin1String("ImageMosaicWall"));
 
     QFile file(":/styles/default.qss");
     file.open(QFile::ReadOnly);
@@ -102,6 +106,8 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+
+    s_cleanupI18nResource();
 }
 
 void MainWindow::updateStatus()

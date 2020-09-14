@@ -60,7 +60,7 @@ ImageMosaicWallPlugin::~ImageMosaicWallPlugin()
 
 QString ImageMosaicWallPlugin::name() const
 {
-    return QString::fromUtf8("Image Mosaic Wall");
+    return tr("Image Mosaic Wall");
 }
 
 QString ImageMosaicWallPlugin::iid() const
@@ -75,13 +75,13 @@ QIcon ImageMosaicWallPlugin::icon() const
 
 QString ImageMosaicWallPlugin::description() const
 {
-    return QString::fromUtf8("A tool to create an image based on a bunch of other images.");
+    return tr("A tool to create an image based on a bunch of other images.");
 }
 
 QString ImageMosaicWallPlugin::details() const
 {
-    return QString::fromUtf8("<p>This tool allows you to create an image based on a bunch of other images. "
-                             "It looks like a mosaic effect.</p>");
+    return tr("<p>This tool allows you to create an image based on a bunch of other images. "
+              "It looks like a mosaic effect.</p>");
 }
 
 QList<DPluginAuthor> ImageMosaicWallPlugin::authors() const
@@ -100,7 +100,7 @@ void ImageMosaicWallPlugin::setup(QObject* const parent)
 {
     DPluginAction* const ac = new DPluginAction(parent);
     ac->setIcon(icon());
-    ac->setText(QString::fromUtf8("Image Mosaic Wall..."));
+    ac->setText(tr("Image Mosaic Wall..."));
     ac->setObjectName(QLatin1String("ImageMosaicWall"));
     ac->setActionCategory(DPluginAction::GenericTool);
 
