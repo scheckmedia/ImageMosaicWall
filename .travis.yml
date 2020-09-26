@@ -20,7 +20,7 @@ before_install:
 install:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     sudo apt-get -qy install doxygen graphviz lcov extra-cmake-modules libgl1-mesa-dev;
-    sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns;
+    sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns; qt${QT}tools
     gem install lcoveralls;
 
     mkdir exiv2 && cd exiv2;
