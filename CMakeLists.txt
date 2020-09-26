@@ -53,6 +53,8 @@ set_package_properties("exiv2"     PROPERTIES
                        PURPOSE     "Library to manage image metadata"
 )
 
+include(i18nUtils)
+
 include_directories($<TARGET_PROPERTY:exiv2lib,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt5::Widgets,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt5::Core,INTERFACE_INCLUDE_DIRECTORIES>
@@ -68,6 +70,8 @@ set(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.cpp
                               ${CMAKE_SOURCE_DIR}/imageprocessing.cpp
                               ${CMAKE_SOURCE_DIR}/progressbutton.cpp
                               ${CMAKE_SOURCE_DIR}/asyncdirectoryscanner.cpp
+                              ${i18n_QRC_SRCS}
+                              ${i18n_QM}
 )
 
 qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
