@@ -15,6 +15,38 @@ QMainWindow {
   font-family: 'Source Sans Pro';
 }
 
+#scrollArea, #scroll {
+  background-color: #2a2f3a;
+}
+
+QScrollBar:vertical {
+  border-style: none;
+  background-color: #4c566a;
+  width: 15px;
+  margin: 21px 0 21px 0;
+}
+
+QScrollBar::handle:vertical {
+  background-color: #3B4252;
+  min-height: 25px;
+}
+
+QScrollBar::add-line:vertical {
+  image: url(:/icons/assets/down.png);
+  background-color: #98abb2;
+  height: 20px;
+  subcontrol-position: bottom;
+  subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+  image: url(:/icons/assets/up.png);
+  background-color: #98abb2;
+  height: 20px;
+  subcontrol-position: top;
+  subcontrol-origin: margin;
+}
+
 .MainWindow QLabel {
   color: #98abb2;
   font-family: 'Source Sans Pro';
