@@ -35,7 +35,8 @@ install:
 # brew install exiv2 (0.27.3) causes some crashes we use 0.27.2
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew install doxygen graphviz qt5 openssh;
-    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/6a39dfa5a1b2c379f41b2a2f55c8baae75e0d553/Formula/exiv2.rb;
+    curl https://raw.githubusercontent.com/Homebrew/homebrew-core/6a39dfa5a1b2c379f41b2a2f55c8baae75e0d553/Formula/exiv2.rb -o exiv2.rb;
+    brew install exiv2.rb;
     brew link --force qt5;
   fi
 before_script:
