@@ -6,7 +6,7 @@
  * Date        : 2020-05-26
  * Description : ImageMosaicWall generic plugin.
  *
- * Copyright (C) 2020 by Gilles Caulier <caulier dot gilles at gmail dot com>
+ * Copyright (C) 2020-2023 by Gilles Caulier <caulier dot gilles at gmail dot com>
  *
  * This program is free software; you can redistribute it
  * and/or modify it under the terms of the GNU General
@@ -89,10 +89,10 @@ QList<DPluginAuthor> ImageMosaicWallPlugin::authors() const
     return QList<DPluginAuthor>()
             << DPluginAuthor(QString::fromUtf8("Tobias Scheck"),
                              QString::fromUtf8("tobias at scheck-media dot de"),
-                             QString::fromUtf8("(C) 2018-2020"))
+                             QString::fromUtf8("(C) 2018-2023"))
             << DPluginAuthor(QString::fromUtf8("Gilles Caulier"),
                              QString::fromUtf8("caulier dot gilles at gmail dot com"),
-                             QString::fromUtf8("(C) 2020"))
+                             QString::fromUtf8("(C) 2020-2023"))
     ;
 }
 
@@ -131,6 +131,16 @@ void ImageMosaicWallPlugin::slotImageMosaicWall()
         dlg->onImageDropped(topImage);
         dlg->show();
     }
+}
+
+QString ImageMosaicWallPlugin::handbookSection() const
+{
+    return QLatin1String("post_processing");
+}
+
+QString ImageMosaicWallPlugin::handbookChapter() const
+{
+    return QLatin1String("mosaicwall_tool");
 }
 
 } // namespace DigikamGenericImageMosaicWallPlugin
