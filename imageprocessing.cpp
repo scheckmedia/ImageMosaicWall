@@ -4,6 +4,19 @@
 #include <QImage>
 #include <QImageReader>
 #include <exiv2/exiv2.hpp>
+#include <exiv2/exv_conf.h>
+#include <exiv2/version.hpp>
+
+#ifndef EXIV2_TEST_VERSION
+#    define EXIV2_TEST_VERSION(major,minor,patch) \
+         ( EXIV2_VERSION >= EXIV2_MAKE_VERSION(major,minor,patch) )
+#endif
+
+#if EXIV2_TEST_VERSION(0,27,99)
+#   define AutoPtr UniquePtr
+#   define AnyError Error
+#   define kerErrorMessage ErrorCode::kerErrorMessage
+#endif
 
 ImageProcessing::ImageProcessing(QObject *parent)
     : QObject(parent)
