@@ -18,7 +18,7 @@ fi
 
 cd build
 
-/opt/qt6/bin/cmake -G "$MAKEFILES_TYPE" . \
+cmake -G "$MAKEFILES_TYPE" . \
       -DCMAKE_INSTALL_PREFIX=/usr \
       -Wno-dev \
       -DENABLE_DPLUGIN=ON \
