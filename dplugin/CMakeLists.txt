@@ -31,10 +31,10 @@ target_link_libraries(Generic_ImageMosaicWall_Plugin
 
                       Digikam::digikamcore
 
-                      Qt5::Core
-                      Qt5::Widgets
-                      Qt5::Gui
-                      Qt5::Concurrent
+                      Qt${QT_VERSION_MAJOR}::Core
+                      Qt${QT_VERSION_MAJOR}::Widgets
+                      Qt${QT_VERSION_MAJOR}::Gui
+                      Qt${QT_VERSION_MAJOR}::Concurrent
 
                       exiv2lib
 )
