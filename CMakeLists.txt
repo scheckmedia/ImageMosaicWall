@@ -9,6 +9,7 @@ project(ImageMosaicWall)
 cmake_minimum_required(VERSION "3.1.0")
 
 option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
+option(BUILD_WITH_QT6 "Build with Qt6, else Qt5"                                             OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 if (ENABLE_DPLUGIN)
@@ -23,7 +24,7 @@ endif()
 
 include(FeatureSummary)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -34,13 +35,31 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 
-find_package(Qt5 "5.6.0" REQUIRED
-             NO_MODULE COMPONENTS
-             Core
-             Widgets
-             Gui
-             Concurrent
-)
+if(BUILD_WITH_QT6)
+
+    find_package(Qt6 "6.5.0" REQUIRED
+                 NO_MODULE COMPONENTS
+                 Core
+                 Widgets
+                 Gui
+                 Concurrent
+    )
+
+    set(QT_VERSION_MAJOR 6)
+
+else()
+
+    find_package(Qt5 "5.6.0" REQUIRED
+                 NO_MODULE COMPONENTS
+                 Core
+                 Widgets
+                 Gui
+                 Concurrent
+    )
+
+    set(QT_VERSION_MAJOR 5)
+
+endif()
 
 find_package(Threads)
 
@@ -56,10 +75,10 @@ set_package_properties("exiv2"     PROPERTIES
 include(i18nUtils)
 
 include_directories($<TARGET_PROPERTY:exiv2lib,INTERFACE_INCLUDE_DIRECTORIES>
-                    $<TARGET_PROPERTY:Qt5::Widgets,INTERFACE_INCLUDE_DIRECTORIES>
-                    $<TARGET_PROPERTY:Qt5::Core,INTERFACE_INCLUDE_DIRECTORIES>
-                    $<TARGET_PROPERTY:Qt5::Gui,INTERFACE_INCLUDE_DIRECTORIES>
-                    $<TARGET_PROPERTY:Qt5::Concurrent,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Widgets,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Core,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Gui,INTERFACE_INCLUDE_DIRECTORIES>
+                    $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Concurrent,INTERFACE_INCLUDE_DIRECTORIES>
 
                     ${CMAKE_BINARY_DIR}
                     ${CMAKE_SOURCE_DIR}
@@ -74,13 +93,26 @@ set(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.cpp
                               ${i18n_QM}
 )
 
-qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
-                                      ${CMAKE_SOURCE_DIR}/imageviewer.ui
-)
 
-qt5_add_resources(imagemosaicwall_core_QRC_SRCS ${CMAKE_SOURCE_DIR}/assets.qrc)
+if(Qt6_FOUND)
 
-set(libimagemosaicwall_core_SRCS    
+    qt6_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
+                                          ${CMAKE_SOURCE_DIR}/imageviewer.ui
+    )
+
+    qt6_add_resources(imagemosaicwall_core_QRC_SRCS ${CMAKE_SOURCE_DIR}/assets.qrc)
+
+else()
+
+    qt5_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
+                                          ${CMAKE_SOURCE_DIR}/imageviewer.ui
+    )
+
+    qt5_add_resources(imagemosaicwall_core_QRC_SRCS ${CMAKE_SOURCE_DIR}/assets.qrc)
+
+endif()
+
+set(libimagemosaicwall_core_SRCS
     ${imagemosaicwall_core_SRCS}
     ${imagemosaicwall_core_QRC_SRCS}
 )
@@ -91,23 +123,20 @@ if(NOT MSVC)
     target_compile_options(imagemosaicwallcore PRIVATE -fPIC)
 endif()
 
-
 if(APPLE)
   add_executable(ImageMosaicWall MACOSX_BUNDLE ${OSX_APP_ICON} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 else()
   add_executable(ImageMosaicWall ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 endif()
 
-
-
 target_link_libraries(ImageMosaicWall
 
                       imagemosaicwallcore
 
-                      Qt5::Core
-                      Qt5::Widgets
-                      Qt5::Gui
-                      Qt5::Concurrent
+                      Qt${QT_VERSION_MAJOR}::Core
+                      Qt${QT_VERSION_MAJOR}::Widgets
+                      Qt${QT_VERSION_MAJOR}::Gui
+                      Qt${QT_VERSION_MAJOR}::Concurrent
 
                       exiv2lib
                       ${CMAKE_THREAD_LIBS_INIT}

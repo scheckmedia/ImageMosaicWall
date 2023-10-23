@@ -41,20 +41,50 @@ void ImageViewer::clearPreview()
 
 void ImageViewer::wheelEvent(QWheelEvent *event)
 {
-    const QPointF p0scene = mapToScene(event->pos());
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+
+    const QPointF p0scene = mapToScene(event->position().toPoint());
+    qreal factor = qPow(1.2, event->angleDelta().y() / 240.0);
+
+#else
+
+    const QPointF p0scene = mapToScene(event->pos());
     qreal factor = qPow(1.2, event->delta() / 240.0);
+
+#endif
+
     scale(factor, factor);
 
     const QPointF p1mouse = mapFromScene(p0scene);
+
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+
+    const QPointF move = p1mouse - event->position().toPoint(); // The move
+
+#else
+
     const QPointF move = p1mouse - event->pos(); // The move
+
+#endif
+
     horizontalScrollBar()->setValue(move.x() + horizontalScrollBar()->value());
     verticalScrollBar()->setValue(move.y() + verticalScrollBar()->value());
 }
 
 void ImageViewer::fitToScene(const QImage &img)
 {
+
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+
+    resetTransform();
+
+#else
+
     resetMatrix();
+
+#endif
+
     QSize s = parentWidget()->size();
     setSceneRect(0.0, 0.0, img.width(), img.height());
     float sx = s.width() / (float)img.width();

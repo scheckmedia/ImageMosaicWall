@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2008-2020 by Gilles Caulier, <caulier dot gilles at gmail dot com>
+# Copyright (c) 2008-2023 by Gilles Caulier, <caulier dot gilles at gmail dot com>
 #
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
@@ -22,5 +22,6 @@ cmake -G "$MAKEFILES_TYPE" . \
       -DCMAKE_INSTALL_PREFIX=/usr \
       -Wno-dev \
       -DENABLE_DPLUGIN=ON \
+      -DBUILD_WITH_QT6=ON \
       ..
 

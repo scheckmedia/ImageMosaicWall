@@ -61,8 +61,18 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
             numCellsPerThread += numCells % maxThreads;
         }
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+
+        QtConcurrent::run(
+            &pool, &ImageProcessing::calculateMosaicPositions, this, gridSize, t * itemsPerThread, numCellsPerThread);
+
+#else
+
         QtConcurrent::run(
             &pool, this, &ImageProcessing::calculateMosaicPositions, gridSize, t * itemsPerThread, numCellsPerThread);
+
+#endif
+
     }
 
     pool.waitForDone();
