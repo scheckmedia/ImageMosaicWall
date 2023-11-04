@@ -1,17 +1,18 @@
 #
-# Copyright (c) 2020, Gilles Caulier, <caulier dot gilles at gmail dot com>
+# Copyright (c) 2020-2023, Gilles Caulier, <caulier dot gilles at gmail dot com>
 #
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
+cmake_minimum_required(VERSION "3.16")
+
 project(ImageMosaicWall)
 
-cmake_minimum_required(VERSION "3.1.0")
-
-option(ENABLE_DPLUGIN "Build digiKam plugin version of Image Mosaic Wall tool (default=OFF)" OFF)
-option(BUILD_WITH_QT6 "Build with Qt6, else Qt5"                                             OFF)
+option(ENABLE_DPLUGIN "Build digiKam plugin only of Image Mosaic Wall tool (default=OFF)" OFF)
+option(BUILD_WITH_QT6 "Build with Qt6, else Qt5"                                          OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
+
 if (ENABLE_DPLUGIN)
     include(MacroInstall)
 endif()
@@ -24,6 +25,12 @@ endif()
 
 include(FeatureSummary)
 
+if(MSVC)
+    add_compile_options(/utf-8)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive-")
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
@@ -33,7 +40,6 @@ endif()
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-
 
 if(BUILD_WITH_QT6)
 
@@ -93,7 +99,6 @@ set(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.cpp
                               ${i18n_QM}
 )
 
-
 if(Qt6_FOUND)
 
     qt6_wrap_ui(imagemosaicwall_core_SRCS ${CMAKE_SOURCE_DIR}/mainwindow.ui
@@ -123,43 +128,46 @@ if(NOT MSVC)
     target_compile_options(imagemosaicwallcore PRIVATE -fPIC)
 endif()
 
-if(APPLE)
-  add_executable(ImageMosaicWall MACOSX_BUNDLE ${OSX_APP_ICON} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+if(NOT ENABLE_DPLUGIN)
+
+    if(APPLE)
+        add_executable(ImageMosaicWall MACOSX_BUNDLE ${OSX_APP_ICON} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+    else()
+        add_executable(ImageMosaicWall ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+    endif()
+
+    target_link_libraries(ImageMosaicWall
+
+                          imagemosaicwallcore
+
+                          Qt${QT_VERSION_MAJOR}::Core
+                          Qt${QT_VERSION_MAJOR}::Widgets
+                          Qt${QT_VERSION_MAJOR}::Gui
+                          Qt${QT_VERSION_MAJOR}::Concurrent
+
+                          exiv2lib
+                         ${CMAKE_THREAD_LIBS_INIT}
+    )
+
+    if(APPLE)
+        set(APPS "\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app")
+        set(DIRS "\${CMAKE_INSTALL_PREFIX}/share")
+
+        install(TARGETS ${PROJECT_NAME}
+                BUNDLE DESTINATION . COMPONENT Runtime
+                RUNTIME DESTINATION bin COMPONENT Runtime)
+
+        install(CODE "
+            include(BundleUtilities)
+            fixup_bundle(\"${APPS}\"  \"\"  \"${DIRS}\")
+            " COMPONENT Runtime)
+    else()
+        install(TARGETS ImageMosaicWall RUNTIME DESTINATION bin)
+    endif()
+
 else()
-  add_executable(ImageMosaicWall ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-endif()
 
-target_link_libraries(ImageMosaicWall
-
-                      imagemosaicwallcore
-
-                      Qt${QT_VERSION_MAJOR}::Core
-                      Qt${QT_VERSION_MAJOR}::Widgets
-                      Qt${QT_VERSION_MAJOR}::Gui
-                      Qt${QT_VERSION_MAJOR}::Concurrent
-
-                      exiv2lib
-                      ${CMAKE_THREAD_LIBS_INIT}
-)
-
-if(APPLE)
-  set(APPS "\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app")
-  set(DIRS "\${CMAKE_INSTALL_PREFIX}/share")
-
-  install(TARGETS ${PROJECT_NAME}
-    BUNDLE DESTINATION . COMPONENT Runtime
-    RUNTIME DESTINATION bin COMPONENT Runtime
-  )
-
-  install(CODE "
-    include(BundleUtilities)
-    fixup_bundle(\"${APPS}\"  \"\"  \"${DIRS}\")
-  " COMPONENT Runtime)
-else()
-  install(TARGETS ImageMosaicWall RUNTIME DESTINATION bin)
-endif()
-
-if (ENABLE_DPLUGIN)
     add_subdirectory(dplugin)
     MACRO_ADD_UNINSTALL_TARGET()
+
 endif()
