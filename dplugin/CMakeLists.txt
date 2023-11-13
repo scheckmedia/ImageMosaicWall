@@ -36,7 +36,7 @@ target_link_libraries(Generic_ImageMosaicWall_Plugin
                       Qt${QT_VERSION_MAJOR}::Gui
                       Qt${QT_VERSION_MAJOR}::Concurrent
 
-                      exiv2lib
+                      ${LibExiv2_LIBRARIES}
 )
 
 MACRO_ADD_PLUGIN_INSTALL_TARGET(Generic_ImageMosaicWall_Plugin generic)

@@ -69,12 +69,24 @@ endif()
 
 find_package(Threads)
 
-find_package(exiv2 REQUIRED)
+find_package(LibExiv2 OPTIONAL_COMPONENTS)
 
-set_package_properties("exiv2"     PROPERTIES
-                       DESCRIPTION "Required to build digiKam"
-                       URL         "https://www.exiv2.org"
-                       TYPE        RECOMMENDED
+if(LibExiv2_FOUND AND ("${LibExiv2_VERSION}" VERSION_GREATER "0.27.99"))
+
+    find_package(LibExiv2 REQUIRED)
+    set(EXIV2_PACKAGE_NAME "LibExiv2")
+
+else()
+
+    set(LibExiv2_FOUND FALSE)
+    find_package(exiv2 REQUIRED)
+    set(EXIV2_PACKAGE_NAME "exiv2")
+
+endif()
+
+set_package_properties(${EXIV2_PACKAGE_NAME} PROPERTIES
+                       URL                   "https://www.exiv2.org"
+                       TYPE                  RECOMMENDED
                        PURPOSE     "Library to manage image metadata"
 )
 
@@ -145,8 +157,8 @@ if(NOT ENABLE_DPLUGIN)
                           Qt${QT_VERSION_MAJOR}::Gui
                           Qt${QT_VERSION_MAJOR}::Concurrent
 
-                          exiv2lib
-                         ${CMAKE_THREAD_LIBS_INIT}
+                          ${LibExiv2_LIBRARIES}
+                          ${CMAKE_THREAD_LIBS_INIT}
     )
 
     if(APPLE)
