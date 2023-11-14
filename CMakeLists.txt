@@ -69,31 +69,17 @@ endif()
 
 find_package(Threads)
 
-find_package(LibExiv2 OPTIONAL_COMPONENTS)
+find_package(exiv2lib REQUIRED CONFIG NAMES exiv2)
 
-if(LibExiv2_FOUND AND ("${LibExiv2_VERSION}" VERSION_GREATER "0.27.99"))
-
-    find_package(LibExiv2 REQUIRED)
-    set(EXIV2_PACKAGE_NAME "LibExiv2")
-
-else()
-
-    set(LibExiv2_FOUND FALSE)
-    find_package(exiv2 REQUIRED)
-    set(EXIV2_PACKAGE_NAME "exiv2")
-
-endif()
-
-set_package_properties(${EXIV2_PACKAGE_NAME} PROPERTIES
-                       URL                   "https://www.exiv2.org"
-                       TYPE                  RECOMMENDED
+set_package_properties(exiv2lib PROPERTIES
+                       URL         "https://www.exiv2.org"
+                       TYPE        RECOMMENDED
                        PURPOSE     "Library to manage image metadata"
 )
 
 include(i18nUtils)
 
-include_directories($<TARGET_PROPERTY:exiv2lib,INTERFACE_INCLUDE_DIRECTORIES>
-                    $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Widgets,INTERFACE_INCLUDE_DIRECTORIES>
+include_directories($<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Widgets,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Core,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Gui,INTERFACE_INCLUDE_DIRECTORIES>
                     $<TARGET_PROPERTY:Qt${QT_VERSION_MAJOR}::Concurrent,INTERFACE_INCLUDE_DIRECTORIES>
@@ -136,6 +122,11 @@ set(libimagemosaicwall_core_SRCS
 
 add_library(imagemosaicwallcore STATIC ${libimagemosaicwall_core_SRCS})
 
+target_link_libraries(imagemosaicwallcore
+                      PUBLIC
+                      Exiv2::exiv2lib
+)
+
 if(NOT MSVC)
     target_compile_options(imagemosaicwallcore PRIVATE -fPIC)
 endif()
@@ -157,7 +148,6 @@ if(NOT ENABLE_DPLUGIN)
                           Qt${QT_VERSION_MAJOR}::Gui
                           Qt${QT_VERSION_MAJOR}::Concurrent
 
-                          ${LibExiv2_LIBRARIES}
                           ${CMAKE_THREAD_LIBS_INIT}
     )
 
