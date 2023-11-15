@@ -71,6 +71,26 @@ find_package(Threads)
 
 find_package(exiv2lib REQUIRED CONFIG NAMES exiv2)
 
+if(exiv2lib_FOUND)
+
+    message(STATUS "Found Exiv2 version ${exiv2lib_VERSION}")
+
+    # Work around the cmake export rules from Exiv2 since 0.28
+
+    if("${exiv2lib_VERSION}" VERSION_GREATER "0.27.99")
+
+        set(exiv2lib_LIBRARIES Exiv2::exiv2lib)
+
+    else()
+
+        set(exiv2lib_LIBRARIES exiv2lib)
+
+    endif()
+
+    message(STATUS "Exiv2 libraries: ${exiv2lib_LIBRARIES}")
+
+endif()
+
 set_package_properties(exiv2lib PROPERTIES
                        URL         "https://www.exiv2.org"
                        TYPE        RECOMMENDED
@@ -124,7 +144,7 @@ add_library(imagemosaicwallcore STATIC ${libimagemosaicwall_core_SRCS})
 
 target_link_libraries(imagemosaicwallcore
                       PUBLIC
-                      Exiv2::exiv2lib
+                      ${exiv2lib_LIBRARIES}
 )
 
 if(NOT MSVC)
