@@ -119,11 +119,12 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
 
     QSize gridCellSize(floor(gx), floor(gy));
 
-    int numberOfPixel = gridCellSize.width() * gridCellSize.height();
-
     for (; g < pos + numCells; ++g)
     {
-        int red = 0, green = 0, blue = 0;
+        // Cells at the right and bottom edge can be partly outside the image, so only
+        // the pixels actually summed are counted. 64 bit sums, large cells overflow int.
+        qint64 red = 0, green = 0, blue = 0;
+        qint64 numberOfPixel = 0;
         gx = (g % gridSize.width()) * gridCellSize.width();
         gy = g / gridSize.width() * gridCellSize.height();
 
@@ -144,12 +145,17 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
                 red += c.red();
                 green += c.green();
                 blue += c.blue();
+                ++numberOfPixel;
             }
         }
 
-        red /= numberOfPixel;
-        green /= numberOfPixel;
-        blue /= numberOfPixel;
+        // A cell entirely outside the image is never rendered, it just stays black.
+        if (numberOfPixel > 0)
+        {
+            red /= numberOfPixel;
+            green /= numberOfPixel;
+            blue /= numberOfPixel;
+        }
 
         colorMap.at(g) = QColor(red, green, blue);
         emit cellProcessed(g);
