@@ -6,7 +6,7 @@
 #
 
 include(GNUInstallDirs)
-include(${CMAKE_INSTALL_FULL_LIBDIR}/cmake/DigikamPlugin/DigikamPluginConfig.cmake)
+find_package(DigikamPlugin CONFIG REQUIRED)
 
 # MACRO_ADD_PLUGIN_INSTALL_TARGET
 # Install plugin files on the system processed with "make install" or "make install/fast".
