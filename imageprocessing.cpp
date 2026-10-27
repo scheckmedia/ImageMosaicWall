@@ -56,11 +56,17 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
     if (!isReady())
         return false;
 
+    int numCells = gridSize.width() * gridSize.height();
+
+    // The cell colors must have been calculated for this exact grid, otherwise
+    // calculateMosaicPositions() reads past the end of m_gridColorMap.
+    if (m_gridColorMap.size() != static_cast<size_t>(numCells))
+        return false;
+
     m_outputSize = outputSize;
     m_historySize = history;
 
     int maxThreads = QThreadPool::globalInstance()->maxThreadCount();
-    int numCells = gridSize.width() * gridSize.height();
     int itemsPerThread = numCells / maxThreads;
     QThreadPool pool;
 

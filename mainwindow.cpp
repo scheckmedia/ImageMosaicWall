@@ -31,8 +31,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->wImageContainer->layout()->addWidget(&m_imageView);
 
     qRegisterMetaType<GridPoint>("GridPoint");
-    connect(ui->sbRows, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
-    connect(ui->sbCols, SIGNAL(valueChanged(QString)), this, SLOT(onGridPropsValueChanged()));
+    connect(ui->sbRows, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onGridPropsValueChanged);
+    connect(ui->sbCols, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onGridPropsValueChanged);
     connect(ui->btnSetResolution, SIGNAL(clicked(bool)), this, SLOT(onOutputResolutionChanged()));
 
     connect(ui->btnCancel, &QPushButton::clicked, [&]() {
@@ -175,6 +175,7 @@ void MainWindow::loadImage(QString &filename)
     QFuture<void> f = QtConcurrent::run([=]() { m_imageProcessing.processGrid(m_baseImage, gridSize); });
 
     connect(watcher, &QFutureWatcher<void>::finished, [=]() {
+        m_processedGridSize = gridSize;
         ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
         watcher->deleteLater();
         updateStatus();
@@ -269,14 +270,11 @@ void MainWindow::onGridPropsValueChanged()
     if (m_baseImage.width() == 0 || m_baseImage.height() == 0)
         return;
 
+    // Only update the view here. The grid cell colors are recalculated when the mosaic
+    // is generated, so a spin box change cannot race with a running generation.
     QSize gridSize(ui->sbCols->value(), ui->sbRows->value());
     m_imageView.setGrid(gridSize);
     ui->btnLoad->setRange(0, gridSize.width() * gridSize.height());
-
-    QtConcurrent::run([=]() {
-        m_imageProcessing.processGrid(m_baseImage, gridSize);
-        ui->btnGenerate->setEnabled(m_imageProcessing.isReady());
-    });
 }
 
 void MainWindow::onOutputResolutionChanged()
@@ -287,6 +285,7 @@ void MainWindow::onOutputResolutionChanged()
         return;
 
     m_baseImage = m_baseImage.scaled(res);
+    m_processedGridSize = QSize();
     m_imageView.setImage(m_baseImage);
     onGridPropsValueChanged();
     ui->btnSave->setEnabled(false);
@@ -295,8 +294,13 @@ void MainWindow::onOutputResolutionChanged()
 void MainWindow::onMosaicCreationFinished()
 {
     m_imageView.setMosaicLoadingDone();
-    m_imageView.setPreview(*m_imageProcessing.getOutputImage());
-    ui->btnSave->setEnabled(true);
+
+    auto out = m_imageProcessing.getOutputImage();
+    if (out != nullptr)
+        m_imageView.setPreview(*out);
+
+    toggleUI(true);
+    ui->btnCancel->hide();
     delete m_mosaicGeneration;
 }
 
@@ -338,17 +342,19 @@ void MainWindow::on_btnGenerate_clicked()
     m_imageProcessing.processCanceled(false);
     m_imageView.clearPreview();
     ui->btnCancel->show();
-    m_mosaicGeneration = QThread::create([&] {
-        QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
 
-        m_imageProcessing.moveToThread(this->thread());
-        bool success = m_imageProcessing.generateImage(m_baseImage.size(), gridSize, m_variations[ui->slHistory->value()]);
+    // Read all widget state here on the GUI thread; the generation thread must not touch the UI.
+    QSize gridSize = QSize(ui->sbCols->value(), ui->sbRows->value());
+    int history = m_variations[ui->slHistory->value()];
+    bool gridChanged = gridSize != m_processedGridSize;
+    QImage baseImage = m_baseImage;
+    m_processedGridSize = gridSize;
 
-        if (!success)
-            return;
+    m_mosaicGeneration = QThread::create([=] {
+        if (gridChanged)
+            m_imageProcessing.processGrid(baseImage, gridSize);
 
-        toggleUI(true);
-        ui->btnCancel->hide();
+        m_imageProcessing.generateImage(baseImage.size(), gridSize, history);
     });
     connect(m_mosaicGeneration, SIGNAL(finished()), this, SLOT(onMosaicCreationFinished()));
     m_mosaicGeneration->start();
