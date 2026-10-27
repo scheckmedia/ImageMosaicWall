@@ -254,6 +254,11 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
         }
         gridLock.unlock();
 
+        // Best match ignoring the history, used when every image is already placed
+        // nearby (small folder or high variation). Without it the cell stayed empty.
+        double bestAnyDistance = INT_MAX;
+        QString bestAnyPath;
+
         // brute force knn should be replaced by kd-tree
         // this is the bottleneck with ~30 ms per cell
         for (auto &image : m_imageMeanMap.keys())
@@ -263,12 +268,21 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
 
             double dist = calculateDistance(cellMeanLab, imageMean);
 
+            if (dist < bestAnyDistance)
+            {
+                bestAnyPath = image;
+                bestAnyDistance = dist;
+            }
+
             if (dist < bestDistance && history.contains(image) == false)
             {
                 imagePath = image;
                 bestDistance = dist;
             }
         }
+
+        if (imagePath.isEmpty())
+            imagePath = bestAnyPath;
 
         QImage image = extractThumbnail(imagePath, cellSize);
         if (image.isNull())
