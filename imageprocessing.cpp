@@ -288,9 +288,10 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
         if (image.isNull())
             image = loadOrientedImage(imagePath);
 
-        QImage cellImage = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
-                               .copy(QRect(QPoint(0, 0), cellSize))
-                               .convertToFormat(QImage::Format_ARGB32);
+        // Fill the cell and crop the overflow evenly from both sides, keeping the center.
+        QImage scaled = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+        QPoint cropOrigin((scaled.width() - cellSize.width()) / 2, (scaled.height() - cellSize.height()) / 2);
+        QImage cellImage = scaled.copy(QRect(cropOrigin, cellSize)).convertToFormat(QImage::Format_ARGB32);
 
         gridLock.relock();
         m_gridMapCache.insert(p, imagePath);
