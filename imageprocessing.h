@@ -78,8 +78,11 @@ private:
     QMap<QString, QColor> m_imageMeanMap;
     QMap<GridPoint, QString> m_gridMapCache;
     QMutex m_lockMean;
+    QMutex m_lockGrid;
     QSize m_outputSize;
     std::shared_ptr<QImage> m_outputImage;
+    uchar *m_outputBits = nullptr;
+    qsizetype m_outputBytesPerLine = 0;
     std::atomic<bool> m_skipBackgroundProcess;
     int m_historySize;
 };

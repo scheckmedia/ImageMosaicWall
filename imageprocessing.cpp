@@ -1,6 +1,7 @@
 #include "imageprocessing.h"
 #include <algorithm>
 #include <cstdlib>
+#include <cstring>
 #include <QDebug>
 #include <QImage>
 #include <QImageReader>
@@ -71,6 +72,14 @@ bool ImageProcessing::generateImage(QSize outputSize, QSize gridSize, int histor
     QThreadPool pool;
 
     m_outputImage = std::unique_ptr<QImage>(new QImage(outputSize, QImage::Format_ARGB32));
+    m_outputImage->fill(Qt::transparent);
+
+    // Worker threads write their cells straight into the pixel buffer. Calling
+    // QImage::setPixel() from several threads is not safe, it detaches each time.
+    m_outputBits = m_outputImage->bits();
+    m_outputBytesPerLine = m_outputImage->bytesPerLine();
+
+    m_gridMapCache.clear();
 
     int numCellsPerThread = itemsPerThread;
     for (int t = 0; t < maxThreads; ++t)
@@ -198,7 +207,6 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
 void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int startPos, const int length)
 {
     QVector<QString> history;
-    m_gridMapCache.clear();
 
     double gx = ceil(m_outputSize.width() / static_cast<float>(gridSize.width()));
     double gy = ceil(m_outputSize.height() / static_cast<float>(gridSize.height()));
@@ -227,6 +235,7 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
         p.setX(pos % gridSize.width());
         p.setY(pos / gridSize.width());
 
+        QMutexLocker gridLock(&m_lockGrid);
         for (int kx = -m_historySize; kx <= m_historySize; ++kx)
         {
             for (int ky = -m_historySize; ky <= m_historySize; ++ky)
@@ -243,6 +252,7 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
                     history.push_back(m_gridMapCache.value(pDelta));
             }
         }
+        gridLock.unlock();
 
         // brute force knn should be replaced by kd-tree
         // this is the bottleneck with ~30 ms per cell
@@ -265,31 +275,27 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
             image = QImage(imagePath);
 
         QImage cellImage = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
-                               .copy(QRect(QPoint(0, 0), cellSize));
+                               .copy(QRect(QPoint(0, 0), cellSize))
+                               .convertToFormat(QImage::Format_ARGB32);
 
-        QMutexLocker lock(&m_lockMean);
+        gridLock.relock();
         m_gridMapCache.insert(p, imagePath);
-        lock.unlock();
+        gridLock.unlock();
         emit mosaicGenerated(p);
 
-        int nx = 0;
-        int ny = 0;
+        // Cells never overlap, so each thread writes to its own region of the buffer.
+        int x0 = p.x() * cellSize.width();
+        int y0 = p.y() * cellSize.height();
+        int w = qMin(cellImage.width(), m_outputSize.width() - x0);
+        int h = qMin(cellImage.height(), m_outputSize.height() - y0);
 
-        for (int y = 0; y < cellSize.height(); ++y)
+        // With a rounded-up cell size the last rows/columns can start past the image edge.
+        if (w <= 0 || h <= 0)
+            continue;
+
+        for (int y = 0; y < h; ++y)
         {
-            ny = p.y() * gy + y;
-            if (ny < 0 || ny >= m_outputImage->height())
-                continue;
-
-            for (int x = 0; x < cellSize.width(); ++x)
-            {
-                nx = p.x() * gx + x;
-                if (nx < 0 || nx >= m_outputImage->width())
-                    continue;
-
-                auto const pixel = cellImage.pixel(x, y);
-                m_outputImage.get()->setPixel(nx, ny, pixel);
-            }
+            memcpy(m_outputBits + (y0 + y) * m_outputBytesPerLine + x0 * 4, cellImage.constScanLine(y), w * 4);
         }
     }
 }
