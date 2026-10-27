@@ -164,7 +164,7 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
 
         QImage image = extractThumbnail(imageFileName, QSize(128, 128));
         if (image.isNull())
-            image = QImage(imageFileName).scaled(QSize(128, 128), Qt::IgnoreAspectRatio, Qt::FastTransformation);
+            image = loadOrientedImage(imageFileName).scaled(QSize(128, 128), Qt::IgnoreAspectRatio, Qt::FastTransformation);
 
         if (image.isNull())
             return;
@@ -286,7 +286,7 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
 
         QImage image = extractThumbnail(imagePath, cellSize);
         if (image.isNull())
-            image = QImage(imagePath);
+            image = loadOrientedImage(imagePath);
 
         QImage cellImage = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
                                .copy(QRect(QPoint(0, 0), cellSize))
@@ -381,6 +381,49 @@ bool ImageProcessing::isReady()
     return !(m_gridColorMap.size() == 0 || m_imageMeanMap.size() == 0);
 }
 
+QImage applyExifOrientation(const QImage &image, int orientation)
+{
+    // Maps the stored image to its display orientation, see the Exif 2.3 spec, tag 0x0112.
+    // QTransform(m11, m12, m21, m22, dx, dy): x' = m11 * x + m21 * y, y' = m12 * x + m22 * y
+    QTransform transform;
+
+    switch (orientation)
+    {
+        case 2: // mirror horizontally
+            transform = QTransform(-1, 0, 0, 1, 0, 0);
+            break;
+        case 3: // rotate 180°
+            transform = QTransform(-1, 0, 0, -1, 0, 0);
+            break;
+        case 4: // mirror vertically
+            transform = QTransform(1, 0, 0, -1, 0, 0);
+            break;
+        case 5: // transpose
+            transform = QTransform(0, 1, 1, 0, 0, 0);
+            break;
+        case 6: // rotate 90° clockwise
+            transform = QTransform(0, 1, -1, 0, 0, 0);
+            break;
+        case 7: // transverse
+            transform = QTransform(0, -1, -1, 0, 0, 0);
+            break;
+        case 8: // rotate 90° counter-clockwise
+            transform = QTransform(0, -1, 1, 0, 0, 0);
+            break;
+        default:
+            return image;
+    }
+
+    return image.transformed(transform);
+}
+
+QImage loadOrientedImage(const QString &filename)
+{
+    QImageReader reader(filename);
+    reader.setAutoTransform(true);
+    return reader.read();
+}
+
 QImage extractThumbnail(const QString filename, QSize minSize)
 {
     try
@@ -415,7 +458,30 @@ QImage extractThumbnail(const QString filename, QSize minSize)
         }
 
         Exiv2::PreviewImage preview = loader.getPreviewImage(previewProperty);
-        return QImage::fromData(preview.pData(), preview.size());
+        QImage thumbnail = QImage::fromData(preview.pData(), preview.size());
+
+        // Embedded previews are stored like the main image, so the Exif orientation
+        // of the file applies to them as well.
+        Exiv2::ExifData &exifData = image->exifData();
+        auto it = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
+
+        if (it != exifData.end() && it->count() > 0)
+        {
+
+#if EXIV2_TEST_VERSION(0,28,0)
+
+            int orientation = static_cast<int>(it->toInt64());
+
+#else
+
+            int orientation = static_cast<int>(it->toLong());
+
+#endif
+
+            thumbnail = applyExifOrientation(thumbnail, orientation);
+        }
+
+        return thumbnail;
     }
     catch (Exiv2::Error &err)
     {
