@@ -1,5 +1,6 @@
 #include "imageprocessing.h"
 #include <algorithm>
+#include <cstdlib>
 #include <QDebug>
 #include <QImage>
 #include <QImageReader>
@@ -17,6 +18,18 @@
 #   define AnyError Error
 #   define kerErrorMessage ErrorCode::kerErrorMessage
 #endif
+
+template<class RandomIt>
+void my_random_shuffle(RandomIt first, RandomIt last)
+{
+    typedef typename std::iterator_traits<RandomIt>::difference_type diff_t;
+
+    for (diff_t i = last - first - 1; i > 0; --i)
+    {
+        using std::swap;
+        swap(first[i], first[std::rand() % (i + 1)]);
+    }
+}
 
 ImageProcessing::ImageProcessing(QObject *parent)
     : QObject(parent)
@@ -189,7 +202,7 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
     for (uint32_t i = startPos; i < startPos + length; ++i)
         positions.push_back(i);
 
-    std::random_shuffle(positions.begin(), positions.end());
+    my_random_shuffle(positions.begin(), positions.end());
     for (auto pos : positions)
     {
         if (m_skipBackgroundProcess)

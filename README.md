@@ -6,11 +6,10 @@ This application allows you to create an image based on a bunch of other images.
 
 # Dependencies
 
-- Qt5.
-- Cmake 3.x.
-- Exiv2 0.27.x API.
-- extra-cmake-modules
-- digiKam 7.x plugin interface. <https://www.digikam.org> (optional)
+- Qt5 or later.
+- CMake 3.x.
+- Exiv2 0.27.x or later.
+- digiKam 8.x plugin interface. <https://www.digikam.org> (optional)
 
 # Compiling and Installing
 
