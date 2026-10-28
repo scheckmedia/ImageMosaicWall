@@ -119,11 +119,12 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
 
     QSize gridCellSize(floor(gx), floor(gy));
 
-    int numberOfPixel = gridCellSize.width() * gridCellSize.height();
-
     for (; g < pos + numCells; ++g)
     {
-        int red = 0, green = 0, blue = 0;
+        // Cells at the right and bottom edge can be partly outside the image, so only
+        // the pixels actually summed are counted. 64 bit sums, large cells overflow int.
+        qint64 red = 0, green = 0, blue = 0;
+        qint64 numberOfPixel = 0;
         gx = (g % gridSize.width()) * gridCellSize.width();
         gy = g / gridSize.width() * gridCellSize.height();
 
@@ -144,12 +145,17 @@ void ImageProcessing::calculateGridCellsMean(const QImage &baseImage,
                 red += c.red();
                 green += c.green();
                 blue += c.blue();
+                ++numberOfPixel;
             }
         }
 
-        red /= numberOfPixel;
-        green /= numberOfPixel;
-        blue /= numberOfPixel;
+        // A cell entirely outside the image is never rendered, it just stays black.
+        if (numberOfPixel > 0)
+        {
+            red /= numberOfPixel;
+            green /= numberOfPixel;
+            blue /= numberOfPixel;
+        }
 
         colorMap.at(g) = QColor(red, green, blue);
         emit cellProcessed(g);
@@ -164,7 +170,7 @@ void ImageProcessing::calculateImageMeanMap(const QList<QString> imageList)
 
         QImage image = extractThumbnail(imageFileName, QSize(128, 128));
         if (image.isNull())
-            image = QImage(imageFileName).scaled(QSize(128, 128), Qt::IgnoreAspectRatio, Qt::FastTransformation);
+            image = loadOrientedImage(imageFileName).scaled(QSize(128, 128), Qt::IgnoreAspectRatio, Qt::FastTransformation);
 
         if (image.isNull())
             return;
@@ -254,6 +260,11 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
         }
         gridLock.unlock();
 
+        // Best match ignoring the history, used when every image is already placed
+        // nearby (small folder or high variation). Without it the cell stayed empty.
+        double bestAnyDistance = INT_MAX;
+        QString bestAnyPath;
+
         // brute force knn should be replaced by kd-tree
         // this is the bottleneck with ~30 ms per cell
         for (auto &image : m_imageMeanMap.keys())
@@ -263,6 +274,12 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
 
             double dist = calculateDistance(cellMeanLab, imageMean);
 
+            if (dist < bestAnyDistance)
+            {
+                bestAnyPath = image;
+                bestAnyDistance = dist;
+            }
+
             if (dist < bestDistance && history.contains(image) == false)
             {
                 imagePath = image;
@@ -270,13 +287,17 @@ void ImageProcessing::calculateMosaicPositions(const QSize gridSize, const int s
             }
         }
 
+        if (imagePath.isEmpty())
+            imagePath = bestAnyPath;
+
         QImage image = extractThumbnail(imagePath, cellSize);
         if (image.isNull())
-            image = QImage(imagePath);
+            image = loadOrientedImage(imagePath);
 
-        QImage cellImage = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)
-                               .copy(QRect(QPoint(0, 0), cellSize))
-                               .convertToFormat(QImage::Format_ARGB32);
+        // Fill the cell and crop the overflow evenly from both sides, keeping the center.
+        QImage scaled = image.scaled(cellSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+        QPoint cropOrigin((scaled.width() - cellSize.width()) / 2, (scaled.height() - cellSize.height()) / 2);
+        QImage cellImage = scaled.copy(QRect(cropOrigin, cellSize)).convertToFormat(QImage::Format_ARGB32);
 
         gridLock.relock();
         m_gridMapCache.insert(p, imagePath);
@@ -367,6 +388,49 @@ bool ImageProcessing::isReady()
     return !(m_gridColorMap.size() == 0 || m_imageMeanMap.size() == 0);
 }
 
+QImage applyExifOrientation(const QImage &image, int orientation)
+{
+    // Maps the stored image to its display orientation, see the Exif 2.3 spec, tag 0x0112.
+    // QTransform(m11, m12, m21, m22, dx, dy): x' = m11 * x + m21 * y, y' = m12 * x + m22 * y
+    QTransform transform;
+
+    switch (orientation)
+    {
+        case 2: // mirror horizontally
+            transform = QTransform(-1, 0, 0, 1, 0, 0);
+            break;
+        case 3: // rotate 180°
+            transform = QTransform(-1, 0, 0, -1, 0, 0);
+            break;
+        case 4: // mirror vertically
+            transform = QTransform(1, 0, 0, -1, 0, 0);
+            break;
+        case 5: // transpose
+            transform = QTransform(0, 1, 1, 0, 0, 0);
+            break;
+        case 6: // rotate 90° clockwise
+            transform = QTransform(0, 1, -1, 0, 0, 0);
+            break;
+        case 7: // transverse
+            transform = QTransform(0, -1, -1, 0, 0, 0);
+            break;
+        case 8: // rotate 90° counter-clockwise
+            transform = QTransform(0, -1, 1, 0, 0, 0);
+            break;
+        default:
+            return image;
+    }
+
+    return image.transformed(transform);
+}
+
+QImage loadOrientedImage(const QString &filename)
+{
+    QImageReader reader(filename);
+    reader.setAutoTransform(true);
+    return reader.read();
+}
+
 QImage extractThumbnail(const QString filename, QSize minSize)
 {
     try
@@ -401,7 +465,30 @@ QImage extractThumbnail(const QString filename, QSize minSize)
         }
 
         Exiv2::PreviewImage preview = loader.getPreviewImage(previewProperty);
-        return QImage::fromData(preview.pData(), preview.size());
+        QImage thumbnail = QImage::fromData(preview.pData(), preview.size());
+
+        // Embedded previews are stored like the main image, so the Exif orientation
+        // of the file applies to them as well.
+        Exiv2::ExifData &exifData = image->exifData();
+        auto it = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
+
+        if (it != exifData.end() && it->count() > 0)
+        {
+
+#if EXIV2_TEST_VERSION(0,28,0)
+
+            int orientation = static_cast<int>(it->toInt64());
+
+#else
+
+            int orientation = static_cast<int>(it->toLong());
+
+#endif
+
+            thumbnail = applyExifOrientation(thumbnail, orientation);
+        }
+
+        return thumbnail;
     }
     catch (Exiv2::Error &err)
     {

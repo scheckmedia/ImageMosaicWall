@@ -151,7 +151,7 @@ void MainWindow::loadImage(QString &filename)
     if (filename.isEmpty())
         return;
 
-    m_baseImage = QImage(filename);
+    m_baseImage = loadOrientedImage(filename);
 
     if (m_baseImage.isNull())
         return;
